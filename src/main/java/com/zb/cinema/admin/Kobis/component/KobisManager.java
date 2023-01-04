@@ -24,13 +24,14 @@ public class KobisManager {
 
     private String makeBoxOfficeResultUrl(String date) throws UnsupportedEncodingException {
         return BASE_URL +
-                "/boxoffice/searchDailyBoxOfficeList.json?key=" +
-                serviceKey +
-                "&targetDt=" +
-                date;
+            "/boxoffice/searchDailyBoxOfficeList.json?key=" +
+            serviceKey +
+            "&targetDt=" +
+            date;
     }
 
-    public List<MovieCode> fetchBoxOfficeResult(String date) throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
+    public List<MovieCode> fetchBoxOfficeResult(String date)
+        throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
         RestTemplate restTemplate = new RestTemplate();
         String jsonString = restTemplate.getForObject(makeBoxOfficeResultUrl(date), String.class);
         JSONParser jsonParser = new JSONParser();
@@ -49,17 +50,17 @@ public class KobisManager {
 
     private MovieCode makeMovieCodeDto(JSONObject item) {
         return MovieCode.builder()
-                .code(Long.parseLong((String) item.get("movieCd")))
-                .title((String) item.get("movieNm"))
-                .build();
+            .code(Long.parseLong((String) item.get("movieCd")))
+            .title((String) item.get("movieNm"))
+            .build();
     }
 
     private String makeMovieInfoResultUrl(long movieCode) throws UnsupportedEncodingException {
         return BASE_URL +
-                "/movie/searchMovieInfo.json?key=" +
-                serviceKey +
-                "&movieCd=" +
-                movieCode;
+            "/movie/searchMovieInfo.json?key=" +
+            serviceKey +
+            "&movieCd=" +
+            movieCode;
     }
 
     private String arrangeStr(String str) {
@@ -105,26 +106,28 @@ public class KobisManager {
 
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
         LocalDateTime openDt = format.parse((String) item.get("openDt"))
-                                .toInstant()
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDateTime();
+            .toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime();
 
         MovieInfo build = MovieInfo.builder()
-                .code(Long.parseLong((String) item.get("movieCd")))
-                .title((String) item.get("movieNm"))
-                .actors(arrangeStr(actors))
-                .directors(arrangeStr(director))
-                .genre(arrangeStr(genre))
-                .nation(arrangeStr(nation))
-                .runTime(Long.parseLong((String) item.get("showTm")))
-                .openDt(openDt)
-                .build();
+            .code(Long.parseLong((String) item.get("movieCd")))
+            .title((String) item.get("movieNm"))
+            .actors(arrangeStr(actors))
+            .directors(arrangeStr(director))
+            .genre(arrangeStr(genre))
+            .nation(arrangeStr(nation))
+            .runTime(Long.parseLong((String) item.get("showTm")))
+            .openDt(openDt)
+            .build();
         return build;
     }
 
-    public MovieInfo fetchMovieInfoResult(Long movieCode) throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
+    public MovieInfo fetchMovieInfoResult(Long movieCode)
+        throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
         RestTemplate restTemplate = new RestTemplate();
-        String jsonString = restTemplate.getForObject(makeMovieInfoResultUrl(movieCode), String.class);
+        String jsonString = restTemplate.getForObject(makeMovieInfoResultUrl(movieCode),
+            String.class);
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
         JSONObject jsonResponse = (JSONObject) jsonObject.get("movieInfoResult");

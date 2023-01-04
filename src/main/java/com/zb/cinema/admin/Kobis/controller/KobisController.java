@@ -27,7 +27,8 @@ public class KobisController {
     private final MovieInfoRepository movieInfoRePository;
 
     @PostMapping("/api/admin/movieCode/{date}") //yyyyMMdd
-    public ResponseEntity<?> fetchMovieCode(@PathVariable String date) throws UnsupportedEncodingException, ParseException, org.json.simple.parser.ParseException {
+    public ResponseEntity<?> fetchMovieCode(@PathVariable String date)
+        throws UnsupportedEncodingException, ParseException, org.json.simple.parser.ParseException {
 
         List<MovieCode> movieCodeList = kobisManager.fetchBoxOfficeResult(date);
         movieCodeRepository.saveAll(kobisManager.fetchBoxOfficeResult(date));
@@ -36,7 +37,9 @@ public class KobisController {
     }
 
     @PostMapping("/api/admin/movieCode/{start}/{end}") //yyyyMMdd
-    public ResponseEntity<?> fetchManyMovieCodes(@PathVariable String start, @PathVariable String end) throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
+    public ResponseEntity<?> fetchManyMovieCodes(@PathVariable String start,
+        @PathVariable String end)
+        throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
 
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
         Date startFormatDate = format.parse(start);
@@ -48,7 +51,8 @@ public class KobisController {
 
         while (calStart.before(calEnd)) {
             calStart.add(Calendar.DATE, 1);
-            List<MovieCode> movieCodeList = kobisManager.fetchBoxOfficeResult(format.format(calStart.getTime()));
+            List<MovieCode> movieCodeList = kobisManager.fetchBoxOfficeResult(
+                format.format(calStart.getTime()));
             movieCodeRepository.saveAll(movieCodeList);
         }
 
@@ -56,7 +60,8 @@ public class KobisController {
     }
 
     @PostMapping("/api/admin/{movieCode}") //yyyyMMdd
-    public ResponseEntity<?> fetchMovieInfo(@PathVariable Long movieCode) throws UnsupportedEncodingException, ParseException, org.json.simple.parser.ParseException {
+    public ResponseEntity<?> fetchMovieInfo(@PathVariable Long movieCode)
+        throws UnsupportedEncodingException, ParseException, org.json.simple.parser.ParseException {
 
         MovieInfo movie = kobisManager.fetchMovieInfoResult(movieCode);
         movieInfoRePository.save(movie);
