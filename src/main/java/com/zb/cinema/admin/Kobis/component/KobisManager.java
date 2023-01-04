@@ -10,6 +10,9 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,36 +62,77 @@ public class KobisManager {
                 movieCode;
     }
 
-//    private MovieInfo makeMovieInfoDto(JSONObject item) {
-//        return MovieInfo.builder()
-//                .code(Long.parseLong((String) item.get("movieCd")))
-//                .title((String) item.get("movieNm"))
-//                .actors((String) item.get(""))
-//                .director((String) item.get(""))
-//                .genre((String) item.get(""))
-//                .nation((String) item.get(""))
-//                .runTime(Long.parseLong((String) item.get("")))
-//                .openDt(())
-//                .endDt()
-//                .build();
-//    }
-//
-//    public MovieInfo fetchMovieInfoResult(Long movieCode) throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
-//        RestTemplate restTemplate = new RestTemplate();
-//        String jsonString = restTemplate.getForObject(makeMovieInfoResultUrl(movieCode), String.class);
-//        JSONParser jsonParser = new JSONParser();
-//        JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
-//        JSONObject jsonResponse = (JSONObject) jsonObject.get("movieInfoResult");
-//        JSONArray jsonItemList = (JSONArray) jsonResponse.get("movieInfo");
-//
-//        List<MovieCode> result = new ArrayList<>();
-//
-//        for (Object o : jsonItemList) {
-//            JSONObject item = (JSONObject) o;
-//            result.add(makeMovieCodeDto(item));
-//        }
-//        return result;
-//    }
+    private String arrangeStr(String str) {
+        if (str == "") {
+            return "";
+        }
+        return str.substring(0, str.length() - 2);
+    }
 
+    private MovieInfo makeMovieInfoDto(JSONObject item) throws ParseException {
+        String actors = "";
+        String director = "";
+        String genre = "";
+        String nation = "";
+
+        JSONArray nationsList = (JSONArray) item.get("nations");
+        for (Object o : nationsList) {
+            JSONObject nationName = (JSONObject) o;
+            nation += (String) nationName.get("nationNm");
+            nation += ", ";
+        }
+
+        JSONArray actorList = (JSONArray) item.get("actors");
+        for (Object o : actorList) {
+            JSONObject actorName = (JSONObject) o;
+            actors += (String) actorName.get("peopleNm");
+            actors += ", ";
+        }
+
+        JSONArray directorList = (JSONArray) item.get("directors");
+        for (Object o : directorList) {
+            JSONObject directorName = (JSONObject) o;
+            director += (String) directorName.get("peopleNm");
+            director += ", ";
+        }
+
+        JSONArray genreList = (JSONArray) item.get("genres");
+        for (Object o : genreList) {
+            JSONObject genreName = (JSONObject) o;
+            genre += (String) genreName.get("genreNm");
+            genre += ", ";
+        }
+
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+        LocalDateTime openDt = format.parse((String) item.get("openDt"))
+                                .toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDateTime();
+
+        MovieInfo build = MovieInfo.builder()
+                .code(Long.parseLong((String) item.get("movieCd")))
+                .title((String) item.get("movieNm"))
+                .actors(arrangeStr(actors))
+                .directors(arrangeStr(director))
+                .genre(arrangeStr(genre))
+                .nation(arrangeStr(nation))
+                .runTime(Long.parseLong((String) item.get("showTm")))
+                .openDt(openDt)
+                .build();
+        return build;
+    }
+
+    public MovieInfo fetchMovieInfoResult(Long movieCode) throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
+        RestTemplate restTemplate = new RestTemplate();
+        String jsonString = restTemplate.getForObject(makeMovieInfoResultUrl(movieCode), String.class);
+        JSONParser jsonParser = new JSONParser();
+        JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
+        JSONObject jsonResponse = (JSONObject) jsonObject.get("movieInfoResult");
+        JSONObject jsonItemList = (JSONObject) jsonResponse.get("movieInfo");
+
+        MovieInfo result = makeMovieInfoDto(jsonItemList);
+
+        return result;
+    }
 
 }

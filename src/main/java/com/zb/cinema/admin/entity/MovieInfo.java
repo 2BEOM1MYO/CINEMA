@@ -8,17 +8,37 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.time.LocalDateTime;
 
 @Entity
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class MovieCode {
+public class MovieInfo {
 
     @Id
     private long code;
 
     @Column
     private String title;
+
+    @Column
+    private String actors;
+
+    @Column
+    private String directors;
+
+    @Column
+    private String genre;
+
+    @Column
+    private String nation;
+
+    @Column
+    private long runTime;
+
+    @Column
+    private LocalDateTime openDt;
+
 }
