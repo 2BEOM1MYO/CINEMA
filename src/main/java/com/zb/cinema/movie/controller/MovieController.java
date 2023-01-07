@@ -1,15 +1,15 @@
-package com.zb.cinema.admin.movie.controller;
+package com.zb.cinema.movie.controller;
 
-import com.zb.cinema.admin.entity.MovieCode;
-import com.zb.cinema.admin.entity.MovieInfo;
-import com.zb.cinema.admin.movie.component.KobisManager;
-import com.zb.cinema.admin.movie.model.InputDate;
-import com.zb.cinema.admin.movie.model.InputDates;
-import com.zb.cinema.admin.movie.model.InputMovieCode;
-import com.zb.cinema.admin.movie.model.InputMovieNm;
-import com.zb.cinema.admin.movie.model.ResponseMessage;
-import com.zb.cinema.admin.repository.MovieCodeRepository;
-import com.zb.cinema.admin.repository.MovieInfoRepository;
+import com.zb.cinema.movie.entity.MovieCode;
+import com.zb.cinema.movie.entity.MovieInfo;
+import com.zb.cinema.movie.component.KobisManager;
+import com.zb.cinema.movie.model.InputDate;
+import com.zb.cinema.movie.model.InputDates;
+import com.zb.cinema.movie.model.InputMovieCode;
+import com.zb.cinema.movie.model.InputMovieNm;
+import com.zb.cinema.movie.model.ResponseMessage;
+import com.zb.cinema.movie.repository.MovieCodeRepository;
+import com.zb.cinema.movie.repository.MovieInfoRepository;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.zb.cinema.admin.movie.model;
+package com.zb.cinema.movie.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InputDates {
+public class InputDate {
 
-    private String startDt;
-    private String endDt;
+    private String date;
 }

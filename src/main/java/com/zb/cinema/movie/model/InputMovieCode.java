@@ -1,4 +1,4 @@
-package com.zb.cinema.admin.movie.model;
+package com.zb.cinema.movie.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InputDate {
+public class InputMovieCode {
 
-    private String date;
+    private Long movieCode;
 }

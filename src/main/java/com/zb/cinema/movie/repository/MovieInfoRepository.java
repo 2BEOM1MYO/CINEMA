@@ -1,6 +1,6 @@
-package com.zb.cinema.admin.repository;
+package com.zb.cinema.movie.repository;
 
-import com.zb.cinema.admin.entity.MovieInfo;
+import com.zb.cinema.movie.entity.MovieInfo;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

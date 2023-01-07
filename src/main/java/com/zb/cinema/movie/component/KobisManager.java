@@ -1,8 +1,7 @@
-package com.zb.cinema.admin.movie.component;
+package com.zb.cinema.movie.component;
 
-import com.zb.cinema.admin.entity.MovieCode;
-import com.zb.cinema.admin.entity.MovieInfo;
-import com.zb.cinema.admin.movie.model.ResponseMessage;
+import com.zb.cinema.movie.entity.MovieCode;
+import com.zb.cinema.movie.entity.MovieInfo;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -10,8 +9,6 @@ import java.util.Set;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 

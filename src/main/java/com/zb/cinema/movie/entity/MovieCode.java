@@ -1,4 +1,4 @@
-package com.zb.cinema.admin.entity;
+package com.zb.cinema.movie.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,37 +8,17 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import java.time.LocalDateTime;
 
 @Entity
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class MovieInfo {
+public class MovieCode {
 
     @Id
     private long code;
 
     @Column
     private String title;
-
-    @Column
-    private String actors;
-
-    @Column
-    private String directors;
-
-    @Column
-    private String genre;
-
-    @Column
-    private String nation;
-
-    @Column
-    private long runTime;
-
-    @Column
-    private LocalDateTime openDt;
-
 }
