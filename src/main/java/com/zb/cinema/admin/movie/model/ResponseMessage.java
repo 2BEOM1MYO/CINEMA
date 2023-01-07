@@ -1,4 +1,4 @@
-package com.zb.cinema.admin.Kobis.model;
+package com.zb.cinema.admin.movie.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,10 +1,17 @@
-package com.zb.cinema.admin.Kobis.component;
+package com.zb.cinema.admin.movie.component;
 
 import com.zb.cinema.admin.entity.MovieCode;
 import com.zb.cinema.admin.entity.MovieInfo;
+import com.zb.cinema.admin.movie.model.ResponseMessage;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -46,6 +53,27 @@ public class KobisManager {
             result.add(makeMovieCodeDto(item));
         }
         return result;
+    }
+
+    public Set<MovieCode> fetchManyBoxOfficeResult(String startDt, String endDt)
+        throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
+
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+        Date startFormatDate = format.parse(startDt);
+        Date endFormatDate = format.parse(endDt);
+        Calendar calStart = Calendar.getInstance();
+        calStart.setTime(startFormatDate);
+        Calendar calEnd = Calendar.getInstance();
+        calEnd.setTime(endFormatDate);
+
+        Set<MovieCode> movieCodeList = new HashSet<>();
+
+        while (calStart.before(calEnd)) {
+            calStart.add(Calendar.DATE, 1);
+            movieCodeList.addAll(fetchBoxOfficeResult(format.format(calStart.getTime())));
+        }
+
+        return movieCodeList;
     }
 
     private MovieCode makeMovieCodeDto(JSONObject item) {
