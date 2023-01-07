@@ -84,10 +84,15 @@ public class KobisManager {
         }
 
         JSONArray actorList = (JSONArray) item.get("actors");
+        int cnt = 0;
         for (Object o : actorList) {
+            cnt++;
             JSONObject actorName = (JSONObject) o;
             actors += (String) actorName.get("peopleNm");
             actors += ", ";
+            if (cnt > 10) {
+                break;
+            }
         }
 
         JSONArray directorList = (JSONArray) item.get("directors");
