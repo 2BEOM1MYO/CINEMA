@@ -3,6 +3,7 @@ package com.zb.cinema.member.service;
 import com.zb.cinema.member.entity.Member;
 import com.zb.cinema.member.exception.ErrorCode;
 import com.zb.cinema.member.exception.MemberException;
+import com.zb.cinema.member.model.LoginMember;
 import com.zb.cinema.member.model.MemberDto;
 import com.zb.cinema.member.repository.MemberRepository;
 import com.zb.cinema.member.type.MemberType;
@@ -59,5 +60,15 @@ public class MemberService implements UserDetailsService {
 
 		return new org.springframework.security.core.userdetails.User(member.getEmail(),
 			member.getPassword(), authorities);
+	}
+
+	public Member login(LoginMember parameter) {
+		Member member = memberRepository.findByEmail(parameter.getEmail())
+			.orElseThrow(() -> new MemberException(ErrorCode.MEMBER_NOT_FOUND));
+
+		if (!passwordEncoder.matches(parameter.getPassword(), member.getPassword())) {
+			throw new MemberException(ErrorCode.MEMBER_PASSWORD_NOT_SAME);
+		}
+		return member;
 	}
 }
