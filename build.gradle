@@ -25,10 +25,11 @@ dependencies {
 	implementation 'mysql:mysql-connector-java'
 
 
+
+
 	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.3'
-
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
