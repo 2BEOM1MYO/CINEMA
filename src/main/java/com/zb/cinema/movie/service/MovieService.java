@@ -13,10 +13,12 @@ import com.zb.cinema.movie.repository.MovieCodeRepository;
 import com.zb.cinema.movie.repository.MovieInfoRepository;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -40,6 +42,19 @@ public class MovieService {
         movieCodeRepository.saveAll(movieCodeList);
 
         return ResponseMessage.success(movieCodeList);
+    }
+
+    @Scheduled(cron = "0 0 12 * * *")
+    public void fetchToday() {
+        LocalDate day = LocalDate.now().minusDays(1);
+        String dayString = day.toString().replace("-", "");
+
+        List<MovieCode> movieCodeList = (List<MovieCode>) fetchMovieCode(
+            InputDate.builder().date(dayString).build()).getBody();
+
+        for (MovieCode item : movieCodeList) {
+            System.out.println(fetchMovieInfoByMovieCode(InputMovieCode.builder().movieCode(item.getCode()).build()));
+        }
     }
 
     public ResponseMessage fetchManyMovieCodes(InputDates dates) {
