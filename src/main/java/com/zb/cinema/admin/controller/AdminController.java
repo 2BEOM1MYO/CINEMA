@@ -70,4 +70,10 @@ public class AdminController {
         ResponseMessage result = adminService.registerAuditorium(inputAuditorium);
         return ResponseEntity.ok().body(result);
     }
+
+    @GetMapping("/admin/{movieCode}/auditorium")
+    public ResponseEntity<?> auditoriumByMovie(@PathVariable Long movieCode) {
+        ResponseMessage result = adminService.getAuditoriumByMovie(movieCode);
+        return ResponseEntity.ok().body(result);
+    }
 }

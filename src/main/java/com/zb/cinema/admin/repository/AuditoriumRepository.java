@@ -2,6 +2,7 @@ package com.zb.cinema.admin.repository;
 
 import com.zb.cinema.admin.entity.Auditorium;
 import com.zb.cinema.admin.entity.Theater;
+import com.zb.cinema.movie.entity.Movie;
 import java.time.LocalDateTime;
 import java.util.List;
 import net.bytebuddy.asm.Advice.Local;
@@ -17,4 +18,6 @@ public interface AuditoriumRepository extends JpaRepository<Auditorium, Long> {
     List<Auditorium> findAllByStartDtBetweenAndTheaterOrEndDtBetweenAndTheater(
         LocalDateTime startDt1, LocalDateTime endDt1, Theater theater1,
         LocalDateTime startDt2, LocalDateTime endDt2, Theater theater);
+
+    List<Auditorium> findAllByMovie(Movie movie);
 }

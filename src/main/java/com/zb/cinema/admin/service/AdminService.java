@@ -3,6 +3,7 @@ package com.zb.cinema.admin.service;
 import com.zb.cinema.admin.entity.Auditorium;
 import com.zb.cinema.admin.entity.Seat;
 import com.zb.cinema.admin.entity.Theater;
+import com.zb.cinema.admin.model.AuditoriumSchedule;
 import com.zb.cinema.admin.model.InputAuditorium;
 import com.zb.cinema.admin.model.InputTheater;
 import com.zb.cinema.admin.repository.AuditoriumRepository;
@@ -162,5 +163,31 @@ public class AdminService {
         }
 
         return seatList;
+    }
+
+    public ResponseMessage getAuditoriumByMovie(Long movieCode) {
+        Optional<Movie> optionalMovie = movieRepository.findById(movieCode);
+        if (!optionalMovie.isPresent()) {
+            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
+        }
+
+        List<Auditorium> auditoriumList = auditoriumRepository.findAllByMovie(optionalMovie.get());
+        if (auditoriumList.size() < 1) {
+            return ResponseMessage.fail("해당 영화는 상영 일정이 없습니다.");
+        }
+
+        List<AuditoriumSchedule> auditoriumSchedules = new ArrayList<>();
+        for (Auditorium item : auditoriumList) {
+            auditoriumSchedules.add(AuditoriumSchedule.builder()
+                .theater_id(item.getTheater().getId())
+                .auditorium_id(item.getId())
+                .movie_id(item.getMovie().getCode())
+                .title(item.getMovie().getTitle())
+                .startDt(item.getStartDt())
+                .endDt(item.getEndDt())
+                .build());
+        }
+
+        return ResponseMessage.success(auditoriumSchedules);
     }
 }
