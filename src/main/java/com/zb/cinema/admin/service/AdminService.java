@@ -178,9 +178,12 @@ public class AdminService {
 
         List<AuditoriumSchedule> auditoriumSchedules = new ArrayList<>();
         for (Auditorium item : auditoriumList) {
+            long theater_id = item.getTheater().getId();
+            Theater theater = theaterRepository.findById(theater_id).get();
             auditoriumSchedules.add(AuditoriumSchedule.builder()
-                .theater_id(item.getTheater().getId())
+                .theater_id(theater_id)
                 .auditorium_id(item.getId())
+                .theater_nm(theater.getArea() + " " + theater.getCity() + " " + theater.getName())
                 .movie_id(item.getMovie().getCode())
                 .title(item.getMovie().getTitle())
                 .startDt(item.getStartDt())

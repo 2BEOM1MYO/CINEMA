@@ -14,6 +14,7 @@ public class AuditoriumSchedule {
 
     private long theater_id;
     private long auditorium_id;
+    private String theater_nm;
     private long movie_id;
     private String title;
     private LocalDateTime startDt;
