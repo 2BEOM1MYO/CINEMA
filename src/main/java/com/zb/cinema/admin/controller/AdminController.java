@@ -1,5 +1,6 @@
 package com.zb.cinema.admin.controller;
 
+import com.zb.cinema.admin.model.InputAuditorium;
 import com.zb.cinema.admin.model.InputTheater;
 import com.zb.cinema.admin.service.AdminService;
 import com.zb.cinema.movie.model.ResponseMessage;
@@ -61,6 +62,12 @@ public class AdminController {
     @PostMapping("/admin/register/theater")
     public ResponseEntity<?> registerTheater(@RequestBody InputTheater theater) {
         ResponseMessage result = adminService.registerTheater(theater);
+        return ResponseEntity.ok().body(result);
+    }
+
+    @PostMapping("/admin/register/auditorium")
+    public ResponseEntity<?> registerAuditorium(@RequestBody InputAuditorium inputAuditorium) {
+        ResponseMessage result = adminService.registerAuditorium(inputAuditorium);
         return ResponseEntity.ok().body(result);
     }
 }
