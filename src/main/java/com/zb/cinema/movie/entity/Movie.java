@@ -1,5 +1,8 @@
 package com.zb.cinema.movie.entity;
 
+import com.zb.cinema.movie.type.MovieStatus;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,13 +12,14 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class MovieInfo {
+public class Movie {
 
     @Id
     private long code;
@@ -40,5 +44,9 @@ public class MovieInfo {
 
     @Column
     private LocalDateTime openDt;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private MovieStatus status;
 
 }

@@ -2,7 +2,7 @@ package com.zb.cinema.movie.service;
 
 import com.zb.cinema.movie.component.KobisManager;
 import com.zb.cinema.movie.entity.MovieCode;
-import com.zb.cinema.movie.entity.MovieInfo;
+import com.zb.cinema.movie.entity.Movie;
 import com.zb.cinema.movie.type.ErrorCode;
 import com.zb.cinema.movie.model.InputDate;
 import com.zb.cinema.movie.model.InputDates;
@@ -10,7 +10,8 @@ import com.zb.cinema.movie.model.InputMovieCode;
 import com.zb.cinema.movie.model.InputMovieNm;
 import com.zb.cinema.movie.model.ResponseMessage;
 import com.zb.cinema.movie.repository.MovieCodeRepository;
-import com.zb.cinema.movie.repository.MovieInfoRepository;
+import com.zb.cinema.movie.repository.MovieRepository;
+import com.zb.cinema.movie.type.MovieStatus;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.time.LocalDate;
@@ -27,7 +28,7 @@ public class MovieService {
 
     private final KobisManager kobisManager;
     private final MovieCodeRepository movieCodeRepository;
-    private final MovieInfoRepository movieInfoRePository;
+    private final MovieRepository movieRePository;
 
     public ResponseMessage fetchMovieCode(InputDate date) {
         List<MovieCode> movieCodeList;
@@ -75,14 +76,15 @@ public class MovieService {
     }
 
     public ResponseMessage fetchMovieInfoByMovieCode(InputMovieCode inputMovieCode) {
-        MovieInfo movie;
+        Movie movie;
         try {
             movie = kobisManager.fetchMovieInfoResult(inputMovieCode.getMovieCode());
         } catch (Exception e) {
             return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        movieInfoRePository.save(movie);
+        movie.setStatus(MovieStatus.STATUS_WILL);
+        movieRePository.save(movie);
         return ResponseMessage.success(movie);
     }
 
@@ -91,23 +93,24 @@ public class MovieService {
 
         List<MovieCode> movieCodeList = movieCodeRepository.findByTitleContaining(
             inputMovieNm.getMovieNm());
-        List<MovieInfo> movieInfoList = new ArrayList<>();
+        List<Movie> movieList = new ArrayList<>();
 
         for (MovieCode movieCodeDto : movieCodeList) {
             Long movieCode = movieCodeDto.getCode();
-            MovieInfo movie = kobisManager.fetchMovieInfoResult(movieCode);
+            Movie movie = kobisManager.fetchMovieInfoResult(movieCode);
             if (movie == null) {
                 return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
             }
-            movieInfoList.add(movie);
+            movie.setStatus(MovieStatus.STATUS_WILL);
+            movieList.add(movie);
         }
-        if (movieInfoList.size() < 1) {
+        if (movieList.size() < 1) {
             return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        movieInfoRePository.saveAll(movieInfoList);
+        movieRePository.saveAll(movieList);
 
-        return ResponseMessage.success(movieInfoList);
+        return ResponseMessage.success(movieList);
     }
 
     public ResponseMessage getMovieCodeByTitle(String movieNm) {
@@ -120,70 +123,70 @@ public class MovieService {
     }
 
     public ResponseMessage movieInfoListByTitle(String movieNm) {
-        List<MovieInfo> movieInfoList = movieInfoRePository.findAllByTitleContaining(movieNm);
+        List<Movie> movieList = movieRePository.findAllByTitleContaining(movieNm);
 
-        if (movieInfoList.size() < 1) {
+        if (movieList.size() < 1) {
             return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        return ResponseMessage.success(movieInfoList);
+        return ResponseMessage.success(movieList);
     }
 
     public ResponseMessage deleteMovieInfo(String movieNm) {
-        List<MovieInfo> movieInfoList = movieInfoRePository.findAllByTitleContaining(movieNm);
-        if (movieInfoList.size() > 1) {
-            return ResponseMessage.fail(ErrorCode.MANY_MOVIE_FOUND.getDescription(), movieInfoList);
-        } else if (movieInfoList.size() < 1) {
+        List<Movie> movieList = movieRePository.findAllByTitleContaining(movieNm);
+        if (movieList.size() > 1) {
+            return ResponseMessage.fail(ErrorCode.MANY_MOVIE_FOUND.getDescription(), movieList);
+        } else if (movieList.size() < 1) {
             return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        movieInfoRePository.delete(movieInfoList.get(0));
-        return ResponseMessage.success(movieInfoList);
+        movieRePository.delete(movieList.get(0));
+        return ResponseMessage.success(movieList);
     }
 
     public ResponseMessage movieInfoListByGenre(String genre) {
-        List<MovieInfo> movieInfoList;
+        List<Movie> movieList;
 
         try {
-            movieInfoList = movieInfoRePository.findAllByGenreContaining(genre);
+            movieList = movieRePository.findAllByGenreContaining(genre);
         } catch (Exception e) {
             return ResponseMessage.fail("");
         }
-        if (movieInfoList.size() < 1) {
+        if (movieList.size() < 1) {
             return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        return ResponseMessage.success(movieInfoList);
+        return ResponseMessage.success(movieList);
     }
 
     public ResponseMessage movieInfoListByDirector(String director) {
-        List<MovieInfo> movieInfoList;
+        List<Movie> movieList;
 
         try {
-            movieInfoList = movieInfoRePository.findAllByDirectorsContaining(director);
+            movieList = movieRePository.findAllByDirectorsContaining(director);
         } catch (Exception e) {
             return ResponseMessage.fail("");
         }
-        if (movieInfoList.size() < 1) {
+        if (movieList.size() < 1) {
             return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        return ResponseMessage.success(movieInfoList);
+        return ResponseMessage.success(movieList);
     }
 
     public ResponseMessage movieInfoListByActor(String actor) {
-        List<MovieInfo> movieInfoList;
+        List<Movie> movieList;
 
         try {
-            movieInfoList = movieInfoRePository.findAllByActorsContaining(actor);
+            movieList = movieRePository.findAllByActorsContaining(actor);
         } catch (Exception e) {
             return ResponseMessage.fail("");
         }
-        if (movieInfoList.size() < 1) {
+        if (movieList.size() < 1) {
             return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        return ResponseMessage.success(movieInfoList);
+        return ResponseMessage.success(movieList);
     }
 
 }

@@ -1,7 +1,7 @@
 package com.zb.cinema.movie.component;
 
 import com.zb.cinema.movie.entity.MovieCode;
-import com.zb.cinema.movie.entity.MovieInfo;
+import com.zb.cinema.movie.entity.Movie;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -95,7 +95,7 @@ public class KobisManager {
         return str.substring(0, str.length() - 2);
     }
 
-    private MovieInfo makeMovieInfoDto(JSONObject item) throws ParseException {
+    private Movie makeMovieInfoDto(JSONObject item) throws ParseException {
         String actors = "";
         String director = "";
         String genre = "";
@@ -140,7 +140,7 @@ public class KobisManager {
             .atZone(ZoneId.systemDefault())
             .toLocalDateTime();
 
-        MovieInfo build = MovieInfo.builder()
+        Movie build = Movie.builder()
             .code(Long.parseLong((String) item.get("movieCd")))
             .title((String) item.get("movieNm"))
             .actors(arrangeStr(actors))
@@ -153,7 +153,7 @@ public class KobisManager {
         return build;
     }
 
-    public MovieInfo fetchMovieInfoResult(Long movieCode)
+    public Movie fetchMovieInfoResult(Long movieCode)
         throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
         RestTemplate restTemplate = new RestTemplate();
         String jsonString = restTemplate.getForObject(makeMovieInfoResultUrl(movieCode),
@@ -163,7 +163,7 @@ public class KobisManager {
         JSONObject jsonResponse = (JSONObject) jsonObject.get("movieInfoResult");
         JSONObject jsonItemList = (JSONObject) jsonResponse.get("movieInfo");
 
-        MovieInfo result = makeMovieInfoDto(jsonItemList);
+        Movie result = makeMovieInfoDto(jsonItemList);
 
         return result;
     }
