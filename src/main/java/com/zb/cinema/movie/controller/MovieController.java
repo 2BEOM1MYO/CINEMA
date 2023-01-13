@@ -1,22 +1,14 @@
 package com.zb.cinema.movie.controller;
 
-import com.zb.cinema.movie.entity.MovieCode;
-import com.zb.cinema.movie.entity.MovieInfo;
-import com.zb.cinema.movie.component.KobisManager;
 import com.zb.cinema.movie.model.InputDate;
 import com.zb.cinema.movie.model.InputDates;
 import com.zb.cinema.movie.model.InputMovieCode;
 import com.zb.cinema.movie.model.InputMovieNm;
 import com.zb.cinema.movie.model.ResponseMessage;
-import com.zb.cinema.movie.repository.MovieCodeRepository;
-import com.zb.cinema.movie.repository.MovieInfoRepository;
+import com.zb.cinema.movie.service.MovieService;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,175 +21,67 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class MovieController {
 
-    private final KobisManager kobisManager;
-    private final MovieCodeRepository movieCodeRepository;
-    private final MovieInfoRepository movieInfoRePository;
+    private final MovieService movieService;
 
-    @PostMapping("/api/movie/register/movieCode") //yyyyMMdd
+    @PostMapping("/movie/register/movieCode") //yyyyMMdd
     public ResponseEntity<?> fetchMovieCode(@RequestBody InputDate date) {
-
-        List<MovieCode> movieCodeList;
-        try {
-            movieCodeList = kobisManager.fetchBoxOfficeResult(date.getDate());
-        } catch (Exception e) {
-            return new ResponseEntity<>(ResponseMessage.fail("입력값이 정확하지 않습니다."),
-                HttpStatus.BAD_REQUEST);
-        }
-        if (movieCodeList.size() < 1) {
-            return new ResponseEntity<>(ResponseMessage.fail("조회된 영화가 없습니다."),
-                HttpStatus.BAD_REQUEST);
-        }
-        movieCodeRepository.saveAll(movieCodeList);
-
-        return ResponseEntity.ok().body(ResponseMessage.success(movieCodeList));
+        ResponseMessage result = movieService.fetchMovieCode(date);
+        return ResponseEntity.ok().body(result);
     }
 
-    @PostMapping("/api/movie/register/movieCodes") //yyyyMMdd
-    public ResponseEntity<?> fetchManyMovieCodes(@RequestBody InputDates dates)
-        throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
-
-        Set<MovieCode> movieCodeList;
-        try {
-            movieCodeList = kobisManager.fetchManyBoxOfficeResult(dates.getStartDt(),
-                dates.getEndDt());
-        } catch (Exception e) {
-            return new ResponseEntity<>(ResponseMessage.fail(""), HttpStatus.BAD_REQUEST);
-        }
-        if (movieCodeList.size() < 1) {
-            return new ResponseEntity<>(ResponseMessage.fail("조회된 영화가 없습니다."),
-                HttpStatus.BAD_REQUEST);
-        }
-
-        movieCodeRepository.saveAll(movieCodeList);
-
-        return ResponseEntity.ok().body(ResponseMessage.success(movieCodeList));
+    @PostMapping("/movie/register/movieCodes") //yyyyMMdd
+    public ResponseEntity<?> fetchManyMovieCodes(@RequestBody InputDates dates) {
+        ResponseMessage result = movieService.fetchManyMovieCodes(dates);
+        return ResponseEntity.ok().body(result);
     }
 
-    @PostMapping("/api/movie/register/movieInfo/movieCode") //yyyyMMdd
+    @PostMapping("/movie/register/movieInfo/movieCode") //yyyyMMdd
     public ResponseEntity<?> fetchMovieInfoByMovieCode(@RequestBody InputMovieCode inputMovieCode)
         throws UnsupportedEncodingException, ParseException, org.json.simple.parser.ParseException {
-
-        MovieInfo movie = kobisManager.fetchMovieInfoResult(inputMovieCode.getMovieCode());
-        if (movie == null) {
-            return new ResponseEntity<>(ResponseMessage.fail("영화가 조회되지 않았습니다."),
-                HttpStatus.BAD_REQUEST);
-        }
-        movieInfoRePository.save(movie);
-
-        return ResponseEntity.ok().body(ResponseMessage.success(movie));
+        ResponseMessage result = movieService.fetchMovieInfoByMovieCode(inputMovieCode);
+        return ResponseEntity.ok().body(result);
     }
 
-    @PostMapping("/api/movie/register/movieInfo/movieNm") //yyyyMMdd
+    @PostMapping("/movie/register/movieInfo/movieNm") //yyyyMMdd
     public ResponseEntity<?> fetchMovieInfoByMovieNm(@RequestBody InputMovieNm inputMovieNm)
         throws UnsupportedEncodingException, ParseException, org.json.simple.parser.ParseException {
-
-        List<MovieCode> movieCodeList = movieCodeRepository.findByTitleContaining(
-            inputMovieNm.getMovieNm());
-        List<MovieInfo> movieInfoList = new ArrayList<>();
-
-        for (MovieCode movieCodeDto : movieCodeList) {
-            Long movieCode = movieCodeDto.getCode();
-            MovieInfo movie = kobisManager.fetchMovieInfoResult(movieCode);
-            if (movie == null) {
-                return new ResponseEntity<>(ResponseMessage.fail("영화가 조회되지 않았습니다."),
-                    HttpStatus.BAD_REQUEST);
-            }
-            movieInfoList.add(movie);
-        }
-        if (movieInfoList.size() < 1) {
-            return ResponseEntity.ok().body(ResponseMessage.fail("해당 이름의 영화가 없습니다."));
-        }
-
-        movieInfoRePository.saveAll(movieInfoList);
-
-        return ResponseEntity.ok().body(ResponseMessage.success(movieInfoList));
+        ResponseMessage result = movieService.fetchMovieInfoByMovieNm(inputMovieNm);
+        return ResponseEntity.ok().body(result);
     }
 
-    @GetMapping("api/movie/code/{movieNm}")
+    @GetMapping("/movie/code/{movieNm}")
     public ResponseEntity<?> getMovieCodeByTitle(@PathVariable String movieNm) {
-        List<MovieCode> movieCodeList = movieCodeRepository.findByTitleContaining(movieNm);
-
-        if (movieCodeList.size() < 1) {
-            return new ResponseEntity<>(ResponseMessage.fail("영화가 조회되지 않았습니다."),
-                HttpStatus.BAD_REQUEST);
-        }
-        return ResponseEntity.ok().body(ResponseMessage.success(movieCodeList));
+        ResponseMessage result = movieService.getMovieCodeByTitle(movieNm);
+        return ResponseEntity.ok().body(result);
     }
 
-    @GetMapping("api/movie/info/title/{movieNm}")
+    @GetMapping("/movie/info/title/{movieNm}")
     public ResponseEntity<?> movieInfoListByTitle(@PathVariable String movieNm) {
-        List<MovieInfo> movieInfoList = movieInfoRePository.findAllByTitleContaining(movieNm);
-
-        if (movieInfoList.size() < 1) {
-            return new ResponseEntity<>(ResponseMessage.fail("영화가 조회되지 않았습니다."),
-                HttpStatus.BAD_REQUEST);
-        }
-
-        return ResponseEntity.ok().body(ResponseMessage.success(movieInfoList));
+        ResponseMessage result = movieService.movieInfoListByTitle(movieNm);
+        return ResponseEntity.ok().body(result);
     }
 
-    @DeleteMapping("api/movie/delete/{movieNm}")
+    @DeleteMapping("/movie/delete/{movieNm}")
     public ResponseEntity<?> deleteMovieInfo(@PathVariable String movieNm) {
-        List<MovieInfo> movieInfoList = movieInfoRePository.findAllByTitleContaining(movieNm);
-        if (movieInfoList.size() > 1) {
-            return ResponseEntity.ok()
-                .body(ResponseMessage.fail("여러개의 영화가 조회되었습니다. 조금 더 정확한 이름을 입력해주세요."));
-        } else if (movieInfoList.size() < 1) {
-            return ResponseEntity.ok().body(ResponseMessage.fail("영화가 조회되지 않았습니다."));
-        }
-
-        movieInfoRePository.delete(movieInfoList.get(0));
-        return ResponseEntity.ok().body(ResponseMessage.success());
+        ResponseMessage result = movieService.deleteMovieInfo(movieNm);
+        return ResponseEntity.ok().body(result);
     }
 
-    @GetMapping("api/movie/info/genre/{genre}")
+    @GetMapping("/movie/info/genre/{genre}")
     public ResponseEntity<?> movieInfoListByGenre(@PathVariable String genre) {
-        List<MovieInfo> movieInfoList;
-
-        try {
-            movieInfoList = movieInfoRePository.findAllByGenreContaining(genre);
-        } catch (Exception e) {
-            return new ResponseEntity<>(ResponseMessage.fail("영화 조회에 실패하였습니다."),
-                HttpStatus.BAD_REQUEST);
-        }
-        if (movieInfoList.size() < 1) {
-            return ResponseEntity.ok().body(ResponseMessage.fail("영화가 조회되지 않았습니다."));
-        }
-
-        return ResponseEntity.ok().body(ResponseMessage.success(movieInfoList));
+        ResponseMessage result = movieService.movieInfoListByGenre(genre);
+        return ResponseEntity.ok().body(result);
     }
 
-    @GetMapping("api/movie/info/director/{director}")
+    @GetMapping("/movie/info/director/{director}")
     public ResponseEntity<?> movieInfoListByDirector(@PathVariable String director) {
-        List<MovieInfo> movieInfoList;
-
-        try {
-            movieInfoList = movieInfoRePository.findAllByDirectorsContaining(director);
-        } catch (Exception e) {
-            return new ResponseEntity<>(ResponseMessage.fail("영화 조회에 실패하였습니다."),
-                HttpStatus.BAD_REQUEST);
-        }
-        if (movieInfoList.size() < 1) {
-            return ResponseEntity.ok().body(ResponseMessage.fail("영화가 조회되지 않았습니다."));
-        }
-
-        return ResponseEntity.ok().body(ResponseMessage.success(movieInfoList));
+        ResponseMessage result = movieService.movieInfoListByDirector(director);
+        return ResponseEntity.ok().body(result);
     }
 
-    @GetMapping("api/movie/info/actor/{actor}")
+    @GetMapping("/movie/info/actor/{actor}")
     public ResponseEntity<?> movieInfoListByActor(@PathVariable String actor) {
-        List<MovieInfo> movieInfoList;
-
-        try {
-            movieInfoList = movieInfoRePository.findAllByActorsContaining(actor);
-        } catch (Exception e) {
-            return new ResponseEntity<>(ResponseMessage.fail("영화 조회에 실패하였습니다."),
-                HttpStatus.BAD_REQUEST);
-        }
-        if (movieInfoList.size() < 1) {
-            return ResponseEntity.ok().body(ResponseMessage.fail("영화가 조회되지 않았습니다."));
-        }
-
-        return ResponseEntity.ok().body(ResponseMessage.success(movieInfoList));
+        ResponseMessage result = movieService.movieInfoListByActor(actor);
+        return ResponseEntity.ok().body(result);
     }
 }
