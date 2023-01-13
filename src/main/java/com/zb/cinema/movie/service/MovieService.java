@@ -1,25 +1,22 @@
 package com.zb.cinema.movie.service;
 
 import com.zb.cinema.movie.component.KobisManager;
-import com.zb.cinema.movie.entity.MovieCode;
 import com.zb.cinema.movie.entity.Movie;
-import com.zb.cinema.movie.type.ErrorCode;
-import com.zb.cinema.movie.model.InputDate;
-import com.zb.cinema.movie.model.InputDates;
-import com.zb.cinema.movie.model.InputMovieCode;
-import com.zb.cinema.movie.model.InputMovieNm;
-import com.zb.cinema.movie.model.ResponseMessage;
+import com.zb.cinema.movie.entity.MovieCode;
+import com.zb.cinema.movie.model.request.InputDate;
+import com.zb.cinema.movie.model.request.InputDates;
+import com.zb.cinema.movie.model.request.InputMovieCode;
+import com.zb.cinema.movie.model.request.InputMovieNm;
+import com.zb.cinema.movie.model.response.ResponseMessage;
 import com.zb.cinema.movie.repository.MovieCodeRepository;
 import com.zb.cinema.movie.repository.MovieRepository;
+import com.zb.cinema.movie.type.ErrorCode;
 import com.zb.cinema.movie.type.MovieStatus;
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -43,19 +40,6 @@ public class MovieService {
         movieCodeRepository.saveAll(movieCodeList);
 
         return ResponseMessage.success(movieCodeList);
-    }
-
-    @Scheduled(cron = "0 0 12 * * *")
-    public void fetchToday() {
-        LocalDate day = LocalDate.now().minusDays(1);
-        String dayString = day.toString().replace("-", "");
-
-        List<MovieCode> movieCodeList = (List<MovieCode>) fetchMovieCode(
-            InputDate.builder().date(dayString).build()).getBody();
-
-        for (MovieCode item : movieCodeList) {
-            System.out.println(fetchMovieInfoByMovieCode(InputMovieCode.builder().movieCode(item.getCode()).build()));
-        }
     }
 
     public ResponseMessage fetchManyMovieCodes(InputDates dates) {
@@ -89,7 +73,7 @@ public class MovieService {
     }
 
     public ResponseMessage fetchMovieInfoByMovieNm(InputMovieNm inputMovieNm)
-        throws UnsupportedEncodingException, ParseException, org.json.simple.parser.ParseException {
+        throws ParseException, org.json.simple.parser.ParseException {
 
         List<MovieCode> movieCodeList = movieCodeRepository.findByTitleContaining(
             inputMovieNm.getMovieNm());

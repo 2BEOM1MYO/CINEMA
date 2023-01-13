@@ -19,3 +19,7 @@ spring:
 jasypt:
   encryptor:
     bean: jasyptStringEncryptor
+
+kobis:
+  baseUrl: http://kobis.or.kr/kobisopenapi/webservice/rest
+  serviceKey: 48656dce18398a0341dd2159167d8440

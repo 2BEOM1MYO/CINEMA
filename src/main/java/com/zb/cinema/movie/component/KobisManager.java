@@ -9,6 +9,7 @@ import java.util.Set;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -23,8 +24,10 @@ import java.util.List;
 @Component
 public class KobisManager {
 
-    private final String BASE_URL = "http://kobis.or.kr/kobisopenapi/webservice/rest";
-    private final String serviceKey = "48656dce18398a0341dd2159167d8440";
+    @Value("${kobis.baseUrl}")
+    private String BASE_URL;
+    @Value("${kobis.serviceKey}")
+    private String serviceKey;
 
     private String makeBoxOfficeResultUrl(String date) throws UnsupportedEncodingException {
         return BASE_URL +
@@ -35,7 +38,7 @@ public class KobisManager {
     }
 
     public List<MovieCode> fetchBoxOfficeResult(String date)
-        throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
+        throws UnsupportedEncodingException, org.json.simple.parser.ParseException {
         RestTemplate restTemplate = new RestTemplate();
         String jsonString = restTemplate.getForObject(makeBoxOfficeResultUrl(date), String.class);
         JSONParser jsonParser = new JSONParser();
@@ -80,7 +83,7 @@ public class KobisManager {
             .build();
     }
 
-    private String makeMovieInfoResultUrl(long movieCode) throws UnsupportedEncodingException {
+    private String makeMovieInfoResultUrl(long movieCode) {
         return BASE_URL +
             "/movie/searchMovieInfo.json?key=" +
             serviceKey +
@@ -154,7 +157,7 @@ public class KobisManager {
     }
 
     public Movie fetchMovieInfoResult(Long movieCode)
-        throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
+        throws ParseException, org.json.simple.parser.ParseException {
         RestTemplate restTemplate = new RestTemplate();
         String jsonString = restTemplate.getForObject(makeMovieInfoResultUrl(movieCode),
             String.class);

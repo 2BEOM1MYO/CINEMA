@@ -1,21 +1,24 @@
-package com.zb.cinema.admin.model;
+package com.zb.cinema.admin.model.response;
 
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuditoriumSchedule {
 
-    private long theater_id;
-    private long auditorium_id;
-    private String theater_nm;
-    private long movie_id;
+    private long theaterId;
+    private long auditoriumId;
+    private String theaterNm;
+    private long movieId;
     private String title;
     private LocalDateTime startDt;
     private LocalDateTime endDt;
