@@ -21,58 +21,59 @@ public class AdminController {
     private final AdminService adminService;
 
     @PatchMapping("/admin/movie/{movieCode}/showing")
-    public ResponseEntity<?> movieSetShowing(@PathVariable Long movieCode) {
+    public ResponseEntity<ResponseMessage> movieSetShowing(@PathVariable Long movieCode) {
         ResponseMessage result = adminService.setMovieScreeningStatus(movieCode,
             MovieStatus.STATUS_SHOWING);
         return ResponseEntity.ok(result);
     }
 
     @PatchMapping("/admin/movie/{movieCode}/showing/will")
-    public ResponseEntity<?> movieSetShowingWill(@PathVariable Long movieCode) {
+    public ResponseEntity<ResponseMessage> movieSetShowingWill(@PathVariable Long movieCode) {
         ResponseMessage result = adminService.setMovieScreeningStatus(movieCode,
             MovieStatus.STATUS_WILL);
         return ResponseEntity.ok(result);
     }
 
     @PatchMapping("/admin/movie/{movieCode}/showing/over")
-    public ResponseEntity<?> movieSetShowingEnd(@PathVariable Long movieCode) {
+    public ResponseEntity<ResponseMessage> movieSetShowingEnd(@PathVariable Long movieCode) {
         ResponseMessage result = adminService.setMovieScreeningStatus(movieCode,
             MovieStatus.STATUS_OVER);
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/admin/movie/showing")
-    public ResponseEntity<?> getMovieListShowing() {
+    public ResponseEntity<ResponseMessage> getMovieListShowing() {
         ResponseMessage result = adminService.getMovieListByStatus(MovieStatus.STATUS_SHOWING);
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/admin/movie/showing/will")
-    public ResponseEntity<?> getMovieListShowingWill() {
+    public ResponseEntity<ResponseMessage> getMovieListShowingWill() {
         ResponseMessage result = adminService.getMovieListByStatus(MovieStatus.STATUS_WILL);
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/admin/movie/showing/over")
-    public ResponseEntity<?> getMovieListShowingOver() {
+    public ResponseEntity<ResponseMessage> getMovieListShowingOver() {
         ResponseMessage result = adminService.getMovieListByStatus(MovieStatus.STATUS_OVER);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/admin/register/theater")
-    public ResponseEntity<?> registerTheater(@RequestBody InputTheater theater) {
+    public ResponseEntity<ResponseMessage> registerTheater(@RequestBody InputTheater theater) {
         ResponseMessage result = adminService.registerTheater(theater);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/admin/register/auditorium")
-    public ResponseEntity<?> registerAuditorium(@RequestBody InputAuditorium inputAuditorium) {
+    public ResponseEntity<ResponseMessage> registerAuditorium(
+        @RequestBody InputAuditorium inputAuditorium) {
         ResponseMessage result = adminService.registerAuditorium(inputAuditorium);
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/admin/{movieCode}/auditorium")
-    public ResponseEntity<?> auditoriumByMovie(@PathVariable Long movieCode) {
+    public ResponseEntity<ResponseMessage> auditoriumByMovie(@PathVariable Long movieCode) {
         ResponseMessage result = adminService.getAuditoriumByMovie(movieCode);
         return ResponseEntity.ok(result);
     }
