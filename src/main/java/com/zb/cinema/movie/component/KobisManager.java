@@ -1,27 +1,24 @@
 package com.zb.cinema.movie.component;
 
-import com.zb.cinema.movie.entity.MovieCode;
-import com.zb.cinema.movie.entity.Movie;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zb.cinema.movie.model.request.kobis.boxOffice.BoxOffice;
+import com.zb.cinema.movie.model.request.kobis.boxOffice.BoxOfficeResultList;
+import com.zb.cinema.movie.model.request.kobis.movieInfo.MovieInfoOutput;
+import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.UnsupportedEncodingException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-
 @Component
+@RequiredArgsConstructor
 public class KobisManager {
 
     @Value("${kobis.baseUrl}")
@@ -37,26 +34,37 @@ public class KobisManager {
             date;
     }
 
-    public List<MovieCode> fetchBoxOfficeResult(String date)
-        throws UnsupportedEncodingException, org.json.simple.parser.ParseException {
-        RestTemplate restTemplate = new RestTemplate();
-        String jsonString = restTemplate.getForObject(makeBoxOfficeResultUrl(date), String.class);
-        JSONParser jsonParser = new JSONParser();
-        JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
-        JSONObject jsonResponse = (JSONObject) jsonObject.get("boxOfficeResult");
-        JSONArray jsonItemList = (JSONArray) jsonResponse.get("dailyBoxOfficeList");
-
-        List<MovieCode> result = new ArrayList<>();
-
-        for (Object o : jsonItemList) {
-            JSONObject item = (JSONObject) o;
-            result.add(makeMovieCodeDto(item));
-        }
-        return result;
+    private String makeMovieInfoResultUrl(long movieCode) {
+        return BASE_URL +
+            "/movie/searchMovieInfo.json?key=" +
+            serviceKey +
+            "&movieCd=" +
+            movieCode;
     }
 
-    public Set<MovieCode> fetchManyBoxOfficeResult(String startDt, String endDt)
-        throws ParseException, UnsupportedEncodingException, org.json.simple.parser.ParseException {
+    public BoxOffice fetchBoxOfficeResult(String date) {
+
+        String jsonString = "";
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            jsonString = restTemplate.getForObject(makeBoxOfficeResultUrl(date), String.class);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        BoxOffice boxOffice = null;
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            boxOffice = objectMapper.readValue(jsonString, BoxOffice.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return boxOffice;
+    }
+
+    public List<BoxOfficeResultList> fetchManyBoxOfficeResult(String startDt, String endDt)
+        throws ParseException {
 
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
         Date startFormatDate = format.parse(startDt);
@@ -66,109 +74,32 @@ public class KobisManager {
         Calendar calEnd = Calendar.getInstance();
         calEnd.setTime(endFormatDate);
 
-        Set<MovieCode> movieCodeList = new HashSet<>();
+        List<BoxOfficeResultList> boxOfficeList = new ArrayList<>();
 
         while (calStart.before(calEnd)) {
             calStart.add(Calendar.DATE, 1);
-            movieCodeList.addAll(fetchBoxOfficeResult(format.format(calStart.getTime())));
+//            System.out.println(format.format((calStart.getTime())));
+            boxOfficeList.addAll(
+                fetchBoxOfficeResult(format.format((calStart.getTime()))).getBoxOfficeResult()
+                    .getDailyBoxOfficeList());
         }
 
-        return movieCodeList;
+        return boxOfficeList;
     }
 
-    private MovieCode makeMovieCodeDto(JSONObject item) {
-        return MovieCode.builder()
-            .code(Long.parseLong((String) item.get("movieCd")))
-            .title((String) item.get("movieNm"))
-            .build();
-    }
-
-    private String makeMovieInfoResultUrl(long movieCode) {
-        return BASE_URL +
-            "/movie/searchMovieInfo.json?key=" +
-            serviceKey +
-            "&movieCd=" +
-            movieCode;
-    }
-
-    private String arrangeStr(String str) {
-        if (str == "") {
-            return "";
-        }
-        return str.substring(0, str.length() - 2);
-    }
-
-    private Movie makeMovieInfoDto(JSONObject item) throws ParseException {
-        String actors = "";
-        String director = "";
-        String genre = "";
-        String nation = "";
-
-        JSONArray nationsList = (JSONArray) item.get("nations");
-        for (Object o : nationsList) {
-            JSONObject nationName = (JSONObject) o;
-            nation += (String) nationName.get("nationNm");
-            nation += ", ";
-        }
-
-        JSONArray actorList = (JSONArray) item.get("actors");
-        int cnt = 0;
-        for (Object o : actorList) {
-            cnt++;
-            JSONObject actorName = (JSONObject) o;
-            actors += (String) actorName.get("peopleNm");
-            actors += ", ";
-            if (cnt > 10) {
-                break;
-            }
-        }
-
-        JSONArray directorList = (JSONArray) item.get("directors");
-        for (Object o : directorList) {
-            JSONObject directorName = (JSONObject) o;
-            director += (String) directorName.get("peopleNm");
-            director += ", ";
-        }
-
-        JSONArray genreList = (JSONArray) item.get("genres");
-        for (Object o : genreList) {
-            JSONObject genreName = (JSONObject) o;
-            genre += (String) genreName.get("genreNm");
-            genre += ", ";
-        }
-
-        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
-        LocalDateTime openDt = format.parse((String) item.get("openDt"))
-            .toInstant()
-            .atZone(ZoneId.systemDefault())
-            .toLocalDateTime();
-
-        Movie build = Movie.builder()
-            .code(Long.parseLong((String) item.get("movieCd")))
-            .title((String) item.get("movieNm"))
-            .actors(arrangeStr(actors))
-            .directors(arrangeStr(director))
-            .genre(arrangeStr(genre))
-            .nation(arrangeStr(nation))
-            .runTime(Long.parseLong((String) item.get("showTm")))
-            .openDt(openDt)
-            .build();
-        return build;
-    }
-
-    public Movie fetchMovieInfoResult(Long movieCode)
-        throws ParseException, org.json.simple.parser.ParseException {
+    public MovieInfoOutput fetchMovieInfoResult(Long movieCode) {
+        String jsonString = "";
         RestTemplate restTemplate = new RestTemplate();
-        String jsonString = restTemplate.getForObject(makeMovieInfoResultUrl(movieCode),
-            String.class);
-        JSONParser jsonParser = new JSONParser();
-        JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
-        JSONObject jsonResponse = (JSONObject) jsonObject.get("movieInfoResult");
-        JSONObject jsonItemList = (JSONObject) jsonResponse.get("movieInfo");
+        jsonString = restTemplate.getForObject(makeMovieInfoResultUrl(movieCode), String.class);
 
-        Movie result = makeMovieInfoDto(jsonItemList);
+        MovieInfoOutput movieInfoOutput = null;
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            movieInfoOutput = objectMapper.readValue(jsonString, MovieInfoOutput.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
-        return result;
+        return movieInfoOutput;
     }
-
 }

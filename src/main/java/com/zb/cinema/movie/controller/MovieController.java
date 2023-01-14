@@ -1,12 +1,8 @@
 package com.zb.cinema.movie.controller;
 
-import com.zb.cinema.movie.model.request.InputDate;
 import com.zb.cinema.movie.model.request.InputDates;
-import com.zb.cinema.movie.model.request.InputMovieCode;
-import com.zb.cinema.movie.model.request.InputMovieNm;
 import com.zb.cinema.movie.model.response.ResponseMessage;
 import com.zb.cinema.movie.service.MovieService;
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,28 +19,22 @@ public class MovieController {
 
     private final MovieService movieService;
 
-    @PostMapping("/movie/register/movieCode") //yyyyMMdd
-    public ResponseEntity<ResponseMessage> fetchMovieCode(@RequestBody InputDate date) {
-        ResponseMessage result = movieService.fetchMovieCode(date);
+    @PostMapping("/movie/register/{date}") //yyyyMMdd
+    public ResponseEntity<ResponseMessage> saveMovieCode(@PathVariable String date) {
+        ResponseMessage result = movieService.saveMovieCode(date);
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("/movie/register/movieCodes") //yyyyMMdd
-    public ResponseEntity<ResponseMessage> fetchManyMovieCodes(@RequestBody InputDates dates) {
-        ResponseMessage result = movieService.fetchManyMovieCodes(dates);
+    @PostMapping("/movie/register/dates") //yyyyMMdd
+    public ResponseEntity<ResponseMessage> saveMovieCodes(@RequestBody InputDates dates) {
+        ResponseMessage result = movieService.saveManyMovieCodes(dates);
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("/movie/register/movieInfo/movieCode") //yyyyMMdd
-    public ResponseEntity<ResponseMessage> fetchMovieInfoByMovieCode(@RequestBody InputMovieCode inputMovieCode) {
-        ResponseMessage result = movieService.fetchMovieInfoByMovieCode(inputMovieCode);
-        return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/movie/register/movieInfo/movieNm") //yyyyMMdd
-    public ResponseEntity<ResponseMessage> fetchMovieInfoByMovieNm(@RequestBody InputMovieNm inputMovieNm)
-        throws ParseException, org.json.simple.parser.ParseException {
-        ResponseMessage result = movieService.fetchMovieInfoByMovieNm(inputMovieNm);
+    @PostMapping("/movie/register/movieInfo/{movieCode}") //yyyyMMdd
+    public ResponseEntity<ResponseMessage> saveMovieInfo(@PathVariable Long movieCode)
+        throws ParseException {
+        ResponseMessage result = movieService.saveMovieInfoByMovieCode(movieCode);
         return ResponseEntity.ok(result);
     }
 

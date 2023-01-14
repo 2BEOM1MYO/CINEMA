@@ -1,8 +1,7 @@
-package com.zb.cinema.movie.model.request;
+package com.zb.cinema.movie.model.request.kobis.movieInfo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,7 +11,8 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InputMovieCode {
+public class Audits {
 
-    private Long movieCode;
+    private String auditNo;
+    private String watchGradeNm;
 }

@@ -1,8 +1,7 @@
-package com.zb.cinema.movie.model.request;
+package com.zb.cinema.movie.model.request.kobis.movieInfo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,7 +11,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InputMovieNm {
+public class Nations {
 
-    private String movieNm;
+    private String nationNm;
 }

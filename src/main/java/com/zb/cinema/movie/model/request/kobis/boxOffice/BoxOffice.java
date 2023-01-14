@@ -1,8 +1,7 @@
-package com.zb.cinema.movie.model.request;
+package com.zb.cinema.movie.model.request.kobis.boxOffice;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,9 +9,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class InputDate {
+@NoArgsConstructor
+public class BoxOffice {
 
-    private String date;
+    private BoxOfficeResult boxOfficeResult;
 }
