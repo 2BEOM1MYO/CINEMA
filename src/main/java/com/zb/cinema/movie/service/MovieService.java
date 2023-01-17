@@ -1,73 +1,59 @@
 package com.zb.cinema.movie.service;
 
 import com.zb.cinema.movie.component.KobisManager;
-import com.zb.cinema.movie.entity.MovieCode;
 import com.zb.cinema.movie.entity.Movie;
-import com.zb.cinema.movie.type.ErrorCode;
-import com.zb.cinema.movie.model.InputDate;
-import com.zb.cinema.movie.model.InputDates;
-import com.zb.cinema.movie.model.InputMovieCode;
-import com.zb.cinema.movie.model.InputMovieNm;
-import com.zb.cinema.movie.model.ResponseMessage;
+import com.zb.cinema.movie.entity.MovieCode;
+import com.zb.cinema.movie.model.request.kobis.boxOffice.BoxOffice;
+import com.zb.cinema.movie.model.request.kobis.boxOffice.BoxOfficeResultList;
+import com.zb.cinema.movie.model.request.kobis.movieInfo.Actors;
+import com.zb.cinema.movie.model.request.kobis.movieInfo.Directors;
+import com.zb.cinema.movie.model.request.kobis.movieInfo.Genres;
+import com.zb.cinema.movie.model.request.kobis.movieInfo.MovieInfo;
+import com.zb.cinema.movie.model.request.kobis.movieInfo.MovieInfoOutput;
+import com.zb.cinema.movie.model.request.kobis.movieInfo.Nations;
+import com.zb.cinema.movie.model.request.InputDates;
+import com.zb.cinema.movie.model.response.ResponseMessage;
 import com.zb.cinema.movie.repository.MovieCodeRepository;
 import com.zb.cinema.movie.repository.MovieRepository;
+import com.zb.cinema.movie.type.ErrorCode;
 import com.zb.cinema.movie.type.MovieStatus;
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
-import java.time.LocalDate;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class MovieService {
-
-    private final KobisManager kobisManager;
     private final MovieCodeRepository movieCodeRepository;
     private final MovieRepository movieRePository;
 
-    public ResponseMessage fetchMovieCode(InputDate date) {
-        List<MovieCode> movieCodeList;
-        try {
-            movieCodeList = kobisManager.fetchBoxOfficeResult(date.getDate());
-        } catch (Exception e) {
-            return ResponseMessage.fail(ErrorCode.INVALID_INPUT.getDescription());
-        }
-        if (movieCodeList.size() < 1) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
-        }
-        movieCodeRepository.saveAll(movieCodeList);
+    // --------------------test
+    private final KobisManager kobisManager;
 
-        return ResponseMessage.success(movieCodeList);
+    private String arrangeStr(String str) {
+        if (str == "") {
+            return "";
+        }
+        return str.substring(0, str.length() - 2);
     }
 
-    @Scheduled(cron = "0 0 12 * * *")
-    public void fetchToday() {
-        LocalDate day = LocalDate.now().minusDays(1);
-        String dayString = day.toString().replace("-", "");
-
-        List<MovieCode> movieCodeList = (List<MovieCode>) fetchMovieCode(
-            InputDate.builder().date(dayString).build()).getBody();
-
-        for (MovieCode item : movieCodeList) {
-            System.out.println(fetchMovieInfoByMovieCode(InputMovieCode.builder().movieCode(item.getCode()).build()));
-        }
-    }
-
-    public ResponseMessage fetchManyMovieCodes(InputDates dates) {
-        Set<MovieCode> movieCodeList;
-        try {
-            movieCodeList = kobisManager.fetchManyBoxOfficeResult(dates.getStartDt(),
-                dates.getEndDt());
-        } catch (Exception e) {
-            return ResponseMessage.fail(ErrorCode.INVALID_INPUT.getDescription());
-        }
-        if (movieCodeList.size() < 1) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
+    public ResponseMessage saveMovieCode(String date) {
+        BoxOffice boxOffice = kobisManager.fetchBoxOfficeResult(date);
+        List<MovieCode> movieCodeList = new ArrayList<>();
+        for (BoxOfficeResultList item : boxOffice.getBoxOfficeResult().getDailyBoxOfficeList()) {
+            movieCodeList.add(
+                MovieCode.builder()
+                    .code(Long.parseLong(item.getMovieCd()))
+                    .title(item.getMovieNm())
+                    .build()
+            );
         }
 
         movieCodeRepository.saveAll(movieCodeList);
@@ -75,42 +61,90 @@ public class MovieService {
         return ResponseMessage.success(movieCodeList);
     }
 
-    public ResponseMessage fetchMovieInfoByMovieCode(InputMovieCode inputMovieCode) {
-        Movie movie;
+    public ResponseMessage saveManyMovieCodes(InputDates dates) {
+        Set<MovieCode> movieCodeList = new HashSet<>();
+        List<BoxOfficeResultList> boxOfficeList = new ArrayList<>();
         try {
-            movie = kobisManager.fetchMovieInfoResult(inputMovieCode.getMovieCode());
-        } catch (Exception e) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
+            boxOfficeList = kobisManager.fetchManyBoxOfficeResult(
+                dates.getStartDt(), dates.getEndDt());
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
+
+        for (BoxOfficeResultList item : boxOfficeList) {
+            movieCodeList.add(
+                MovieCode.builder()
+                    .code(Long.parseLong(item.getMovieCd()))
+                    .title(item.getMovieNm())
+                    .build()
+            );
+        }
+
+        movieCodeRepository.saveAll(movieCodeList);
+
+        return ResponseMessage.success(movieCodeList);
+    }
+
+    public ResponseMessage saveMovieInfoByMovieCode(Long movieCode) throws ParseException {
+
+        MovieInfoOutput movieInfoOutput = kobisManager.fetchMovieInfoResult(movieCode);
+
+        MovieInfo movieInfo = movieInfoOutput.getMovieInfoResult().getMovieInfo();
+        List<Directors> directors = movieInfo.getDirectors();
+        String director = "";
+        for (Directors item : directors) {
+            director += item.getPeopleNm();
+            director += ", ";
+        }
+
+        List<Actors> actors = movieInfo.getActors();
+        String actor = "";
+        int cnt = 0;
+        for (Actors item : actors) {
+            cnt++;
+            actor += item.getPeopleNm();
+            actor += ", ";
+            if (cnt > 10) {
+                break;
+            }
+        }
+
+        List<Genres> genres = movieInfo.getGenres();
+        String genre = "";
+        for (Genres item : genres) {
+            genre += item.getGenreNm();
+            genre += ", ";
+        }
+
+        List<Nations> nations = movieInfo.getNations();
+        String nation = "";
+        for (Nations item : nations) {
+            nation += item.getNationNm();
+            nation += ", ";
+        }
+
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+        LocalDateTime openDt = format.parse((String) movieInfo.getOpenDt())
+            .toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime();
+
+        Movie movie = Movie.builder()
+            .code(Long.parseLong(
+                movieInfo.getMovieCd()))
+            .title(movieInfo.getMovieNm())
+            .actors(arrangeStr(actor))
+            .directors(arrangeStr(director))
+            .genre(arrangeStr(genre))
+            .nation(arrangeStr(nation))
+            .runTime(Long.parseLong(movieInfo.getShowTm()))
+            .openDt(openDt)
+            .status(MovieStatus.STATUS_WILL)
+            .build();
 
         movie.setStatus(MovieStatus.STATUS_WILL);
         movieRePository.save(movie);
         return ResponseMessage.success(movie);
-    }
-
-    public ResponseMessage fetchMovieInfoByMovieNm(InputMovieNm inputMovieNm)
-        throws UnsupportedEncodingException, ParseException, org.json.simple.parser.ParseException {
-
-        List<MovieCode> movieCodeList = movieCodeRepository.findByTitleContaining(
-            inputMovieNm.getMovieNm());
-        List<Movie> movieList = new ArrayList<>();
-
-        for (MovieCode movieCodeDto : movieCodeList) {
-            Long movieCode = movieCodeDto.getCode();
-            Movie movie = kobisManager.fetchMovieInfoResult(movieCode);
-            if (movie == null) {
-                return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
-            }
-            movie.setStatus(MovieStatus.STATUS_WILL);
-            movieList.add(movie);
-        }
-        if (movieList.size() < 1) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
-        }
-
-        movieRePository.saveAll(movieList);
-
-        return ResponseMessage.success(movieList);
     }
 
     public ResponseMessage getMovieCodeByTitle(String movieNm) {
@@ -188,5 +222,6 @@ public class MovieService {
 
         return ResponseMessage.success(movieList);
     }
+
 
 }

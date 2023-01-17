@@ -3,14 +3,14 @@ package com.zb.cinema.admin.service;
 import com.zb.cinema.admin.entity.Auditorium;
 import com.zb.cinema.admin.entity.Seat;
 import com.zb.cinema.admin.entity.Theater;
-import com.zb.cinema.admin.model.AuditoriumSchedule;
-import com.zb.cinema.admin.model.InputAuditorium;
-import com.zb.cinema.admin.model.InputTheater;
+import com.zb.cinema.admin.model.response.AuditoriumSchedule;
+import com.zb.cinema.admin.model.request.InputAuditorium;
+import com.zb.cinema.admin.model.request.InputTheater;
 import com.zb.cinema.admin.repository.AuditoriumRepository;
 import com.zb.cinema.admin.repository.SeatRepository;
 import com.zb.cinema.admin.repository.TheaterRepository;
 import com.zb.cinema.movie.entity.Movie;
-import com.zb.cinema.movie.model.ResponseMessage;
+import com.zb.cinema.movie.model.response.ResponseMessage;
 import com.zb.cinema.movie.repository.MovieRepository;
 import com.zb.cinema.movie.type.ErrorCode;
 import com.zb.cinema.movie.type.MovieStatus;
@@ -85,7 +85,7 @@ public class AdminService {
     public ResponseMessage registerAuditorium(InputAuditorium inputAuditorium) {
 
         Optional<Theater> optionalTheater = theaterRepository.findById(
-            inputAuditorium.getTheater_id());
+            inputAuditorium.getTheaterId());
         if (!optionalTheater.isPresent()) {
             return ResponseMessage.fail(ErrorCode.THEATER_NOT_FOUND.getDescription());
         }
@@ -178,10 +178,13 @@ public class AdminService {
 
         List<AuditoriumSchedule> auditoriumSchedules = new ArrayList<>();
         for (Auditorium item : auditoriumList) {
+            long theater_id = item.getTheater().getId();
+            Theater theater = theaterRepository.findById(theater_id).get();
             auditoriumSchedules.add(AuditoriumSchedule.builder()
-                .theater_id(item.getTheater().getId())
-                .auditorium_id(item.getId())
-                .movie_id(item.getMovie().getCode())
+                .theaterId(theater_id)
+                .auditoriumId(item.getId())
+                .theaterNm(theater.getArea() + " " + theater.getCity() + " " + theater.getName())
+                .movieId(item.getMovie().getCode())
                 .title(item.getMovie().getTitle())
                 .startDt(item.getStartDt())
                 .endDt(item.getEndDt())

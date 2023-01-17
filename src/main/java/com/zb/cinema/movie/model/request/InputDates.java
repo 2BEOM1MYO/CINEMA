@@ -1,19 +1,19 @@
-package com.zb.cinema.admin.model;
+package com.zb.cinema.movie.model.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Builder
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class InputAuditorium {
+public class InputDates {
 
-    private long theater_id;
-    private long movieCode;
-    private long price;
-    private long seatNum;
     private String startDt;
+    private String endDt;
 }

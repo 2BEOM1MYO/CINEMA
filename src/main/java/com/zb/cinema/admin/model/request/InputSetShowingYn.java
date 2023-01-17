@@ -1,15 +1,20 @@
-package com.zb.cinema.movie.model;
+package com.zb.cinema.admin.model.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InputMovieCode {
+public class InputSetShowingYn {
 
     private Long movieCode;
+
+    private boolean showingYn;
 }
