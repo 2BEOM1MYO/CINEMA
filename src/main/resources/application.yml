@@ -6,15 +6,22 @@ spring:
     password: ENC(iPGny+DngG5+rPczq/yziQ==)
 
 
+
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         format_sql: true
+        show_sql: true
 
   jwt:
     secret: ENC(oAMu1VEToExZeXoxYLwhG5hXaC1pvv7WgbfCov4Yh7XvcXrbK4zU1kW0nEUZgm9EdJEYGXBSXYQ=)
+
+  redis:
+    host: ENC(CCSRmzeU8QTrvz25Ku76gZ/kNsc8GP0z)
+    password: ENC(vDrwbvQB/t5cysucINDlhg==)
+    port: 6379
 
 jasypt:
   encryptor:
