@@ -37,10 +37,12 @@ public class SecurityConfiguration {
 
 		//URL 인증여부 설정.
 		http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-			.authorizeRequests().antMatchers("/", "/member/signup", "member/login").permitAll();
-
-		//JwtFilter 추가
-		http.addFilterBefore(this.authenticationFilter, UsernamePasswordAuthenticationFilter.class);
+			.authorizeRequests()
+			.antMatchers("/", "/member/signup", "/member/login", "/notice/list/**",
+				"/notice/detail/**").permitAll()
+			//JwtFilter 추가
+			.and()
+			.addFilterBefore(this.authenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}

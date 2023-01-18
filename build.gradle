@@ -29,6 +29,7 @@ dependencies {
 	implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.3'
 
 	// chaeyoung
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
 
 	// cheol
