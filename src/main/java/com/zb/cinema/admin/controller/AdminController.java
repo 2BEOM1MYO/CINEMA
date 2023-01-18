@@ -124,6 +124,7 @@ public class AdminController {
         return ResponseEntity.ok(result);
     }
 
+    // 회원 전체 목록 조회
     @GetMapping("/admin/member")
     public ResponseEntity<ResponseMessage> allMember(@RequestHeader("token") String token) {
         ResponseMessage result = adminService.getAllMember(token);

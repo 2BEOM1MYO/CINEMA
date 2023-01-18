@@ -18,21 +18,21 @@ public class MovieScheduler {
 
     private MovieService movieService;
 
+//    @Scheduled(cron = "0 0 12 * * *")
+//    public void fetchToday() throws ParseException {
+//        LocalDate day = LocalDate.now().minusDays(1);
+//        String dayString = day.toString().replace("-", "");
+//
+//        List<MovieCode> movieCodeList = (List<MovieCode>) movieService.saveMovieCode(
+//            dayString).getBody();
+//
+//        for (MovieCode item : movieCodeList) {
+//            System.out.println(movieService.saveMovieInfoByMovieCode(
+//                item.getCode()));
+//        }
+//    }
+
     @Scheduled(cron = "0 0 12 * * *")
-    public void fetchToday() throws ParseException {
-        LocalDate day = LocalDate.now().minusDays(1);
-        String dayString = day.toString().replace("-", "");
-
-        List<MovieCode> movieCodeList = (List<MovieCode>) movieService.saveMovieCode(
-            dayString).getBody();
-
-        for (MovieCode item : movieCodeList) {
-            System.out.println(movieService.saveMovieInfoByMovieCode(
-                item.getCode()));
-        }
-    }
-
-    @Scheduled(cron = "0 5 12 * * *")
     public ResponseMessage saveDayMovieInfo() throws ParseException {
         LocalDate day = LocalDate.now().minusDays(1);
         String dayString = day.toString().replace("-", "");
