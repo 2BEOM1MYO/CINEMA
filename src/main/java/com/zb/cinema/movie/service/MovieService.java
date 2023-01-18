@@ -124,10 +124,13 @@ public class MovieService {
         }
 
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
-        LocalDateTime openDt = format.parse((String) movieInfo.getOpenDt())
-            .toInstant()
-            .atZone(ZoneId.systemDefault())
-            .toLocalDateTime();
+        LocalDateTime openDt = null;
+        if (movieInfo.getOpenDt() != "") {
+            openDt = format.parse((String) movieInfo.getOpenDt())
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+        }
 
         Movie movie = Movie.builder()
             .code(Long.parseLong(
@@ -142,7 +145,7 @@ public class MovieService {
             .status(MovieStatus.STATUS_WILL)
             .build();
 
-        movie.setStatus(MovieStatus.STATUS_WILL);
+//        movie.setStatus(MovieStatus.STATUS_WILL);
         movieRePository.save(movie);
         return ResponseMessage.success(movie);
     }

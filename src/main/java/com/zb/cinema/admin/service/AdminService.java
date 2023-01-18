@@ -3,12 +3,18 @@ package com.zb.cinema.admin.service;
 import com.zb.cinema.admin.entity.Auditorium;
 import com.zb.cinema.admin.entity.Seat;
 import com.zb.cinema.admin.entity.Theater;
+import com.zb.cinema.admin.model.response.AdminMemberDto;
 import com.zb.cinema.admin.model.response.AuditoriumSchedule;
 import com.zb.cinema.admin.model.request.InputAuditorium;
 import com.zb.cinema.admin.model.request.InputTheater;
 import com.zb.cinema.admin.repository.AuditoriumRepository;
 import com.zb.cinema.admin.repository.SeatRepository;
 import com.zb.cinema.admin.repository.TheaterRepository;
+import com.zb.cinema.config.jwt.TokenProvider;
+import com.zb.cinema.member.entity.Member;
+import com.zb.cinema.member.exception.MemberError;
+import com.zb.cinema.member.repository.MemberRepository;
+import com.zb.cinema.member.type.MemberType;
 import com.zb.cinema.movie.entity.Movie;
 import com.zb.cinema.movie.model.response.ResponseMessage;
 import com.zb.cinema.movie.repository.MovieRepository;
@@ -30,6 +36,8 @@ public class AdminService {
     private final TheaterRepository theaterRepository;
     private final AuditoriumRepository auditoriumRepository;
     private final SeatRepository seatRepository;
+    private final TokenProvider tokenProvider;
+    private final MemberRepository memberRepository;
 
     public ResponseMessage setMovieScreeningStatus(Long movieCode, MovieStatus status) {
 
@@ -192,5 +200,54 @@ public class AdminService {
         }
 
         return ResponseMessage.success(auditoriumSchedules);
+    }
+
+    public ResponseMessage setMemberType(String token, String memberEmail, MemberType memberType) {
+        String email = "";
+        email = tokenProvider.getUserPk(token);
+        Member adminMember = memberRepository.findByEmail(email).get();
+
+        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
+            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+        }
+
+        Optional<Member> optionalMember = memberRepository.findByEmail(memberEmail);
+        if (!optionalMember.isPresent()) {
+            return ResponseMessage.fail(MemberError.MEMBER_NOT_FOUND.getDescription());
+        }
+        Member member = optionalMember.get();
+        if (member.getType() == memberType) {
+            if (memberType == MemberType.ROLE_ADMIN) {
+                return ResponseMessage.fail("이미 관리자회원 입니다.");
+            } else if (memberType == MemberType.ROLE_READWRITE) {
+                return ResponseMessage.fail("이미 일반 회원 입니다.");
+            } else if (memberType == MemberType.ROLE_UN_ACCESSIBLE) {
+                return ResponseMessage.fail("이미 정지된 회원 입니다.");
+            }
+        }
+
+        member.setType(memberType);
+        memberRepository.save(member);
+
+        return ResponseMessage.success();
+    }
+
+    public ResponseMessage getAllMember(String token) {
+
+        String email = "";
+        email = tokenProvider.getUserPk(token);
+        Member adminMember = memberRepository.findByEmail(email).get();
+
+        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
+            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+        }
+
+        List<Member> memberList = memberRepository.findAll();
+        List<AdminMemberDto> adminMemberDtoList = new ArrayList<>();
+        for (Member member : memberList) {
+            adminMemberDtoList.add(AdminMemberDto.from(member));
+        }
+
+        return ResponseMessage.success(adminMemberDtoList);
     }
 }
