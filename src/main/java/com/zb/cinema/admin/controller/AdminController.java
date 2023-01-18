@@ -3,9 +3,7 @@ package com.zb.cinema.admin.controller;
 import com.zb.cinema.admin.model.request.InputAuditorium;
 import com.zb.cinema.admin.model.request.InputTheater;
 import com.zb.cinema.admin.service.AdminService;
-import com.zb.cinema.config.jwt.TokenProvider;
 import com.zb.cinema.member.model.RegisterMember;
-import com.zb.cinema.member.service.MemberService;
 import com.zb.cinema.member.type.MemberType;
 import com.zb.cinema.movie.model.response.ResponseMessage;
 import com.zb.cinema.movie.type.MovieStatus;
@@ -27,29 +25,31 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
     private final AdminService adminService;
-    private final MemberService memberService;
 
     // 영화 상영중으로 설정
     @PatchMapping("/admin/movie/{movieCode}/showing")
-    public ResponseEntity<ResponseMessage> movieSetShowing(@PathVariable Long movieCode) {
+    public ResponseEntity<ResponseMessage> movieSetShowing(@PathVariable Long movieCode,
+        @RequestHeader("token") String token) {
         ResponseMessage result = adminService.setMovieScreeningStatus(movieCode,
-            MovieStatus.STATUS_SHOWING);
+            MovieStatus.STATUS_SHOWING, token);
         return ResponseEntity.ok(result);
     }
 
     // 영화 상영예정으로 설정
     @PatchMapping("/admin/movie/{movieCode}/showing/will")
-    public ResponseEntity<ResponseMessage> movieSetShowingWill(@PathVariable Long movieCode) {
+    public ResponseEntity<ResponseMessage> movieSetShowingWill(@PathVariable Long movieCode,
+        @RequestHeader("token") String token) {
         ResponseMessage result = adminService.setMovieScreeningStatus(movieCode,
-            MovieStatus.STATUS_WILL);
+            MovieStatus.STATUS_WILL, token);
         return ResponseEntity.ok(result);
     }
 
     // 영화 상영종료 설정
     @PatchMapping("/admin/movie/{movieCode}/showing/over")
-    public ResponseEntity<ResponseMessage> movieSetShowingEnd(@PathVariable Long movieCode) {
+    public ResponseEntity<ResponseMessage> movieSetShowingEnd(@PathVariable Long movieCode,
+        @RequestHeader("token") String token) {
         ResponseMessage result = adminService.setMovieScreeningStatus(movieCode,
-            MovieStatus.STATUS_OVER);
+            MovieStatus.STATUS_OVER, token);
         return ResponseEntity.ok(result);
     }
 
@@ -84,8 +84,9 @@ public class AdminController {
     // 상영관(상영일정) 등록
     @PostMapping("/admin/register/auditorium")
     public ResponseEntity<ResponseMessage> registerAuditorium(
-        @RequestBody InputAuditorium inputAuditorium) {
-        ResponseMessage result = adminService.registerAuditorium(inputAuditorium);
+        @RequestBody InputAuditorium inputAuditorium,
+        @RequestHeader("token") String token) {
+        ResponseMessage result = adminService.registerAuditorium(inputAuditorium, token);
         return ResponseEntity.ok(result);
     }
 

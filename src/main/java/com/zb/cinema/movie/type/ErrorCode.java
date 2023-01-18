@@ -1,6 +1,5 @@
 package com.zb.cinema.movie.type;
 
-import java.util.regex.PatternSyntaxException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

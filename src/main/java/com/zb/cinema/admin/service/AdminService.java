@@ -43,7 +43,23 @@ public class AdminService {
     private final TokenProvider tokenProvider;
     private final MemberRepository memberRepository;
 
-    public ResponseMessage setMovieScreeningStatus(Long movieCode, MovieStatus status) {
+    public boolean isAdmin(String token) {
+        String email = "";
+        email = tokenProvider.getUserPk(token);
+        Member adminMember = memberRepository.findByEmail(email).get();
+
+        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
+            return false;
+        }
+        return true;
+    }
+
+    public ResponseMessage setMovieScreeningStatus(Long movieCode, MovieStatus status,
+        String token) {
+
+        if (!isAdmin(token)) {
+            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+        }
 
         Optional<Movie> optionalMovie = movieRepository.findById(movieCode);
         if (!optionalMovie.isPresent()) {
@@ -94,7 +110,11 @@ public class AdminService {
         return ResponseMessage.success(theater);
     }
 
-    public ResponseMessage registerAuditorium(InputAuditorium inputAuditorium) {
+    public ResponseMessage registerAuditorium(InputAuditorium inputAuditorium, String token) {
+
+        if (!isAdmin(token)) {
+            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+        }
 
         Optional<Theater> optionalTheater = theaterRepository.findById(
             inputAuditorium.getTheaterId());
@@ -206,25 +226,8 @@ public class AdminService {
         return ResponseMessage.success(auditoriumSchedules);
     }
 
-    public boolean isAdmin(String token) {
-        String email = "";
-        email = tokenProvider.getUserPk(token);
-        Member adminMember = memberRepository.findByEmail(email).get();
-
-        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
-            return false;
-        }
-        return true;
-    }
-
     public ResponseMessage setMemberType(String token, String memberEmail, MemberType memberType) {
-//        String email = "";
-//        email = tokenProvider.getUserPk(token);
-//        Member adminMember = memberRepository.findByEmail(email).get();
-//
-//        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
-//            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
-//        }
+
         if (!isAdmin(token)) {
             return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
@@ -252,13 +255,6 @@ public class AdminService {
 
     public ResponseMessage getAllMember(String token) {
 
-//        String email = "";
-//        email = tokenProvider.getUserPk(token);
-//        Member adminMember = memberRepository.findByEmail(email).get();
-//
-//        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
-//            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
-//        }
         if (!isAdmin(token)) {
             return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
@@ -272,15 +268,9 @@ public class AdminService {
         return ResponseMessage.success(adminMemberDtoList);
     }
 
-    public ResponseMessage registerAdmin(String token, String email, String password, String name, String phone) {
+    public ResponseMessage registerAdmin(String token, String email, String password, String name,
+        String phone) {
 
-//        String adminEmail = "";
-//        email = tokenProvider.getUserPk(token);
-//        Member adminMember = memberRepository.findByEmail(adminEmail).get();
-//
-//        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
-//            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
-//        }
         if (!isAdmin(token)) {
             return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
