@@ -13,10 +13,13 @@ import com.zb.cinema.admin.repository.TheaterRepository;
 import com.zb.cinema.config.jwt.TokenProvider;
 import com.zb.cinema.member.entity.Member;
 import com.zb.cinema.member.exception.MemberError;
+import com.zb.cinema.member.exception.MemberException;
+import com.zb.cinema.member.model.MemberDto;
 import com.zb.cinema.member.repository.MemberRepository;
 import com.zb.cinema.member.type.MemberType;
 import com.zb.cinema.movie.entity.Movie;
 import com.zb.cinema.movie.model.response.ResponseMessage;
+import com.zb.cinema.movie.model.response.ResponseMessageHeader;
 import com.zb.cinema.movie.repository.MovieRepository;
 import com.zb.cinema.movie.type.ErrorCode;
 import com.zb.cinema.movie.type.MovieStatus;
@@ -26,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -202,12 +206,26 @@ public class AdminService {
         return ResponseMessage.success(auditoriumSchedules);
     }
 
-    public ResponseMessage setMemberType(String token, String memberEmail, MemberType memberType) {
+    public boolean isAdmin(String token) {
         String email = "";
         email = tokenProvider.getUserPk(token);
         Member adminMember = memberRepository.findByEmail(email).get();
 
         if (adminMember.getType() == MemberType.ROLE_READWRITE) {
+            return false;
+        }
+        return true;
+    }
+
+    public ResponseMessage setMemberType(String token, String memberEmail, MemberType memberType) {
+//        String email = "";
+//        email = tokenProvider.getUserPk(token);
+//        Member adminMember = memberRepository.findByEmail(email).get();
+//
+//        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
+//            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+//        }
+        if (!isAdmin(token)) {
             return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
 
@@ -234,11 +252,14 @@ public class AdminService {
 
     public ResponseMessage getAllMember(String token) {
 
-        String email = "";
-        email = tokenProvider.getUserPk(token);
-        Member adminMember = memberRepository.findByEmail(email).get();
-
-        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
+//        String email = "";
+//        email = tokenProvider.getUserPk(token);
+//        Member adminMember = memberRepository.findByEmail(email).get();
+//
+//        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
+//            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+//        }
+        if (!isAdmin(token)) {
             return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
 
@@ -249,5 +270,31 @@ public class AdminService {
         }
 
         return ResponseMessage.success(adminMemberDtoList);
+    }
+
+    public ResponseMessage registerAdmin(String token, String email, String password, String name, String phone) {
+
+//        String adminEmail = "";
+//        email = tokenProvider.getUserPk(token);
+//        Member adminMember = memberRepository.findByEmail(adminEmail).get();
+//
+//        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
+//            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+//        }
+        if (!isAdmin(token)) {
+            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+        }
+
+        Optional<Member> optionalMember = memberRepository.findByEmail(email);
+
+        if (optionalMember.isPresent()) {
+            throw new MemberException(MemberError.MEMBER_ALREADY_EMAIL);
+        }
+
+        String pw = BCrypt.hashpw(password, BCrypt.gensalt());
+
+        return ResponseMessage.success(MemberDto.fromEntity(memberRepository.save(
+            Member.builder().email(email).password(pw).name(name).phone(phone)
+                .regDt(LocalDateTime.now()).type(MemberType.ROLE_ADMIN).build())));
     }
 }

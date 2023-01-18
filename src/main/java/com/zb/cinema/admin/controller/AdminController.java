@@ -4,9 +4,12 @@ import com.zb.cinema.admin.model.request.InputAuditorium;
 import com.zb.cinema.admin.model.request.InputTheater;
 import com.zb.cinema.admin.service.AdminService;
 import com.zb.cinema.config.jwt.TokenProvider;
+import com.zb.cinema.member.model.RegisterMember;
+import com.zb.cinema.member.service.MemberService;
 import com.zb.cinema.member.type.MemberType;
 import com.zb.cinema.movie.model.response.ResponseMessage;
 import com.zb.cinema.movie.type.MovieStatus;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
     private final AdminService adminService;
+    private final MemberService memberService;
 
     // 영화 상영중으로 설정
     @PatchMapping("/admin/movie/{movieCode}/showing")
@@ -122,6 +126,16 @@ public class AdminController {
     @GetMapping("/admin/member")
     public ResponseEntity<ResponseMessage> allMember(@RequestHeader("token") String token) {
         ResponseMessage result = adminService.getAllMember(token);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/admin/register")
+    public ResponseEntity<ResponseMessage> signUpAdmin(
+        @RequestBody @Valid RegisterMember.Request request,
+        @RequestHeader("token") String token) {
+        ResponseMessage result = adminService.registerAdmin(token, request.getEmail(),
+            request.getPassword(), request.getName(),
+            request.getPhone());
         return ResponseEntity.ok(result);
     }
 }
