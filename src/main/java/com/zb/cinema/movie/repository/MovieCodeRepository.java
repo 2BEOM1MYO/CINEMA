@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MovieCodeRepository extends JpaRepository<MovieCode, Long> {
 
-    List<MovieCode> findByTitleContaining(String movieNm);
+    List<MovieCode> findByTitleContaining(String title);
     Optional<MovieCode> findByTitle(String title);
 }

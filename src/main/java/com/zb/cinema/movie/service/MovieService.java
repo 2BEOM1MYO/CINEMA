@@ -33,8 +33,6 @@ import org.springframework.stereotype.Service;
 public class MovieService {
     private final MovieCodeRepository movieCodeRepository;
     private final MovieRepository movieRePository;
-
-    // --------------------test
     private final KobisManager kobisManager;
 
     private String arrangeStr(String str) {
@@ -124,10 +122,13 @@ public class MovieService {
         }
 
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
-        LocalDateTime openDt = format.parse((String) movieInfo.getOpenDt())
-            .toInstant()
-            .atZone(ZoneId.systemDefault())
-            .toLocalDateTime();
+        LocalDateTime openDt = null;
+        if (movieInfo.getOpenDt() != "") {
+            openDt = format.parse((String) movieInfo.getOpenDt())
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+        }
 
         Movie movie = Movie.builder()
             .code(Long.parseLong(
@@ -142,7 +143,6 @@ public class MovieService {
             .status(MovieStatus.STATUS_WILL)
             .build();
 
-        movie.setStatus(MovieStatus.STATUS_WILL);
         movieRePository.save(movie);
         return ResponseMessage.success(movie);
     }
@@ -222,6 +222,4 @@ public class MovieService {
 
         return ResponseMessage.success(movieList);
     }
-
-
 }
