@@ -40,6 +40,7 @@ public class MovieController {
 
     @GetMapping("/movie/code/{movieNm}")
     public ResponseEntity<ResponseMessage> getMovieCodeByTitle(@PathVariable String movieNm) {
+
         ResponseMessage result = movieService.getMovieCodeByTitle(movieNm);
         return ResponseEntity.ok(result);
     }
