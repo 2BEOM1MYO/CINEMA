@@ -1,7 +1,7 @@
 package com.zb.cinema.member.service;
 
 import com.zb.cinema.member.entity.Member;
-import com.zb.cinema.member.exception.ErrorCode;
+import com.zb.cinema.member.exception.MemberError;
 import com.zb.cinema.member.exception.MemberException;
 import com.zb.cinema.member.model.LoginMember;
 import com.zb.cinema.member.model.MemberDto;
@@ -33,7 +33,7 @@ public class MemberService implements UserDetailsService {
 		Optional<Member> optionalMember = memberRepository.findByEmail(email);
 
 		if (optionalMember.isPresent()) {
-			throw new MemberException(ErrorCode.MEMBER_ALREADY_EMAIL);
+			throw new MemberException(MemberError.MEMBER_ALREADY_EMAIL);
 		}
 
 		String pw = BCrypt.hashpw(password, BCrypt.gensalt());
@@ -64,10 +64,10 @@ public class MemberService implements UserDetailsService {
 
 	public Member login(LoginMember parameter) {
 		Member member = memberRepository.findByEmail(parameter.getEmail())
-			.orElseThrow(() -> new MemberException(ErrorCode.MEMBER_NOT_FOUND));
+			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
 
 		if (!passwordEncoder.matches(parameter.getPassword(), member.getPassword())) {
-			throw new MemberException(ErrorCode.MEMBER_PASSWORD_NOT_SAME);
+			throw new MemberException(MemberError.MEMBER_PASSWORD_NOT_SAME);
 		}
 		return member;
 	}
