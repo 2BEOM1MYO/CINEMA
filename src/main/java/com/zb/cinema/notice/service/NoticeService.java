@@ -111,18 +111,8 @@ public class NoticeService {
 	 */
 	public NoticeDto modifyReview(Long noticeId, ModifyReview.Request parameter) {
 
-		Member reviewMember = memberRepository.findByEmail(parameter.getEmail())
-			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
-
-		if (!passwordEncoder.matches(parameter.getPassword(), reviewMember.getPassword())) {
-			throw new MemberException(MemberError.MEMBER_PASSWORD_NOT_SAME);
-		}
-
-		Notice notice = noticeRepository.findByIdAndNoticeMember(noticeId, reviewMember);
-
-		if (!Objects.equals(notice.getNoticeMember().getEmail(), reviewMember.getEmail())) {
-			throw new NoticeException(NoticeError.MOVIE_REVIEW_USER_UN_MATCH);
-		}
+		Member reviewMember = validateMember(parameter.getEmail(), parameter.getPassword());
+		Notice notice = validateWriter(noticeId, reviewMember);
 
 		notice.setContents(parameter.getContents());
 		notice.setStarRating(parameter.getStarRating());
@@ -138,19 +128,39 @@ public class NoticeService {
 	@Transactional
 	public void deleteReview(Long noticeId, DeleteReview parameter) {
 
-		Member reviewMember = memberRepository.findByEmail(parameter.getEmail())
-			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
-
-		if (!passwordEncoder.matches(parameter.getPassword(), reviewMember.getPassword())) {
-			throw new MemberException(MemberError.MEMBER_PASSWORD_NOT_SAME);
-		}
-
-		Notice notice = noticeRepository.findByIdAndNoticeMember(noticeId, reviewMember);
-
-		if (!Objects.equals(notice.getNoticeMember().getEmail(), reviewMember.getEmail())) {
-			throw new NoticeException(NoticeError.MOVIE_REVIEW_USER_UN_MATCH);
-		}
+		Member reviewMember = validateMember(parameter.getEmail(), parameter.getPassword());
+		validateWriter(noticeId, reviewMember);
 
 		noticeRepository.deleteAllById(noticeId);
 	}
+
+	private Member validateMember(String email, String password) {
+
+		Member reviewMember = memberRepository.findByEmail(email)
+			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
+
+		if (!passwordEncoder.matches(password, reviewMember.getPassword())) {
+			throw new MemberException(MemberError.MEMBER_PASSWORD_NOT_SAME);
+		}
+
+		return reviewMember;
+	}
+
+	private Notice validateWriter(Long noticeId, Member member) {
+
+		Optional<Notice> optionalNotice = noticeRepository.findById(noticeId);
+
+		if (optionalNotice.isEmpty()) {
+			throw new NoticeException(NoticeError.MOVIE_REVIEW_ID_NOT_FOUND);
+		}
+
+		Notice notice = optionalNotice.get();
+
+		if (!Objects.equals(notice.getNoticeMember().getEmail(), member.getEmail())) {
+			throw new NoticeException(NoticeError.MOVIE_REVIEW_USER_UN_MATCH);
+		}
+
+		return notice;
+	}
+
 }

@@ -21,7 +21,5 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
 
 	Page<Notice> findByNoticeMovieCode(Long noticeMovie, Pageable pageable);
 
-	Notice findByIdAndNoticeMember(Long noticeId, Member email);
-
 	void deleteAllById(Long noticeId);
 }
