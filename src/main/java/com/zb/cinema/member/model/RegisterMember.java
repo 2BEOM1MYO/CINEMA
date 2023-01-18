@@ -10,7 +10,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 public class RegisterMember {
 
@@ -18,7 +17,6 @@ public class RegisterMember {
 	@Setter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	@ToString
 	public static class Request {
 
 		@NotBlank(message = "사용자 ID(e-mail)는 필수 항목입니다.")
