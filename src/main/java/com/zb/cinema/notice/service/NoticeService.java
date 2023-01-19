@@ -149,10 +149,8 @@ public class NoticeService {
 		String email = "";
 		email = tokenProvider.getUserPk(subToken);
 
-		Member member = memberRepository.findByEmail(email)
+		return memberRepository.findByEmail(email)
 			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
-
-		return member;
 	}
 
 	private Notice validateWriter(Long noticeId, Member member) {
