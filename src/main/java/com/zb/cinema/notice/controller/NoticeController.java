@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class NoticeController {
 
 	private final NoticeService noticeService;
-	private final TokenProvider tokenProvider;
 
 	@PostMapping
 	@PreAuthorize("hasRole('READWRITE')")
