@@ -1,18 +1,18 @@
 package com.zb.cinema.notice.controller;
 
+import com.zb.cinema.config.jwt.TokenProvider;
 import com.zb.cinema.notice.model.DeleteReview;
 import com.zb.cinema.notice.model.ModifyReview;
-import com.zb.cinema.notice.model.NoticeDto;
 import com.zb.cinema.notice.model.ReviewAllList;
 import com.zb.cinema.notice.model.ReviewByMovie;
 import com.zb.cinema.notice.model.ReviewDetail;
 import com.zb.cinema.notice.model.WriteReview;
-import com.zb.cinema.notice.model.WriteReview.Request;
 import com.zb.cinema.notice.service.NoticeService;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,21 +20,24 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/notice")
 public class NoticeController {
 
 	private final NoticeService noticeService;
+	private final TokenProvider tokenProvider;
 
 	@PostMapping
 	@PreAuthorize("hasRole('READWRITE')")
-	public WriteReview.Response writeReview(@RequestBody @Valid WriteReview.Request request) {
-		return WriteReview.Response.from(
-			noticeService.writeReview(request));
+	public WriteReview.Response writeReview(@RequestHeader("Authorization") String token,
+		@RequestBody @Valid WriteReview.Request request) {
+		return WriteReview.Response.from(noticeService.writeReview(token, request));
 
 	}
 
@@ -72,16 +75,19 @@ public class NoticeController {
 	@PutMapping("/detail/{noticeId}")
 	@PreAuthorize("hasRole('READWRITE')")
 	public ModifyReview.Response modifyReview(@PathVariable Long noticeId,
+		@RequestHeader("Authorization") String token,
 		@RequestBody @Valid ModifyReview.Request request) {
 
-		return ModifyReview.Response.from(
-			noticeService.modifyReview(noticeId, request));
+		log.info("token ::::::::::::::::::" + token);
+
+		return ModifyReview.Response.from(noticeService.modifyReview(noticeId, token, request));
 	}
 
 	@DeleteMapping("/detail/{noticeId}")
 	@PreAuthorize("hasRole('READWRITE')")
-	public void deleteReview(@PathVariable Long noticeId, @RequestBody DeleteReview request) {
-		noticeService.deleteReview(noticeId, request);
+	public void deleteReview(@PathVariable Long noticeId,
+		@RequestHeader("Authorization") String token, @RequestBody @Valid DeleteReview request) {
+		noticeService.deleteReview(noticeId, token, request);
 	}
 
 }

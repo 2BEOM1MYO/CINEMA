@@ -12,9 +12,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class DeleteReview {
 
-	@NotBlank(message = "작성자 본인의 ID(e-mail)를 입력해주세요.")
-	private String email;
-
 	@NotBlank(message = "작성자 본인의 비밀번호를 입력해주세요.")
 	private String password;
 

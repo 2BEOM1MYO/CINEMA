@@ -17,9 +17,6 @@ public class WriteReview {
 	@AllArgsConstructor
 	public static class Request {
 
-		@NotBlank(message = "작성자 ID(e-mail)을 입력해주세요.")
-		private String email;
-
 		@NotBlank(message = "영화 제목을 입력해주세요.")
 		private String title;
 
