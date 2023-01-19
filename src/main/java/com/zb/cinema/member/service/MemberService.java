@@ -69,6 +69,11 @@ public class MemberService implements UserDetailsService {
 		if (!passwordEncoder.matches(parameter.getPassword(), member.getPassword())) {
 			throw new MemberException(MemberError.MEMBER_PASSWORD_NOT_SAME);
 		}
+
+		if(MemberType.ROLE_UN_ACCESSIBLE.equals(member.getType())) {
+			throw new MemberException(MemberError.MEMBER_ROLE_UN_ACCESSIBLE);
+		}
+
 		return member;
 	}
 }

@@ -8,7 +8,8 @@ import lombok.Getter;
 public enum MemberError {
 
 	MEMBER_ALREADY_EMAIL("이미 등록된 e-mail 입니다."), MEMBER_NOT_FOUND(
-		"존재 하지 않는 ID 입니다."), MEMBER_PASSWORD_NOT_SAME("등록된 비밀 번호가 다릅니다.");
+		"존재 하지 않는 ID 입니다."), MEMBER_PASSWORD_NOT_SAME(
+		"등록된 비밀 번호가 다릅니다."), MEMBER_ROLE_UN_ACCESSIBLE("정지 회원입니다.");
 
 	private final String description;
 }
