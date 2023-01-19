@@ -8,7 +8,6 @@ import com.zb.cinema.member.model.RegisterMember;
 import com.zb.cinema.member.model.TokenDto;
 import com.zb.cinema.member.service.MemberService;
 import com.zb.cinema.member.type.MemberType;
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,8 +37,7 @@ public class MemberController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<TokenDto> signIn(@RequestBody @Valid LoginMember loginMember,
-		HttpServletResponse response) {
+	public ResponseEntity<TokenDto> signIn(@RequestBody @Valid LoginMember loginMember) {
 
 		Member member = memberService.login(loginMember);
 		String email = member.getEmail();
