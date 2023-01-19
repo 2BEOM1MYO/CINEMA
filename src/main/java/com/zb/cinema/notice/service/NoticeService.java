@@ -1,5 +1,8 @@
 package com.zb.cinema.notice.service;
 
+import static com.zb.cinema.config.jwt.JwtAuthenticationFilter.TOKEN_PREFIX;
+
+import com.zb.cinema.config.jwt.TokenProvider;
 import com.zb.cinema.member.entity.Member;
 import com.zb.cinema.member.exception.MemberError;
 import com.zb.cinema.member.exception.MemberException;
@@ -19,8 +22,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -39,14 +40,15 @@ public class NoticeService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final MovieCodeRepository movieCodeRepository;
+	private final TokenProvider tokenProvider;
 
 	/*
 	 	리뷰 등록
 	 */
-	public NoticeDto writeReview(WriteReview.Request parameter) {
+	@Transactional
+	public NoticeDto writeReview(String token, WriteReview.Request parameter) {
 
-		Member reviewMember = memberRepository.findByEmail(parameter.getEmail())
-			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
+		Member reviewMember = validateMember(token);
 
 		MovieCode movieTitle = movieCodeRepository.findByTitle(parameter.getTitle())
 			.orElseThrow(() -> new NoticeException(NoticeError.MOVIE_TITLE_NOT_FOUND));
@@ -109,9 +111,10 @@ public class NoticeService {
 	/*
 	 	후기 수정 (내용, 별점 수정 가능)
 	 */
-	public NoticeDto modifyReview(Long noticeId, ModifyReview.Request parameter) {
+	@Transactional
+	public NoticeDto modifyReview(Long noticeId, String token, ModifyReview.Request parameter) {
 
-		Member reviewMember = validateMember(parameter.getEmail(), parameter.getPassword());
+		Member reviewMember = validateMember(token);
 		Notice notice = validateWriter(noticeId, reviewMember);
 
 		notice.setContents(parameter.getContents());
@@ -126,24 +129,30 @@ public class NoticeService {
 		후기 삭제하기
 	 */
 	@Transactional
-	public void deleteReview(Long noticeId, DeleteReview parameter) {
+	public void deleteReview(Long noticeId, String token, DeleteReview parameter) {
 
-		Member reviewMember = validateMember(parameter.getEmail(), parameter.getPassword());
+		Member reviewMember = validateMember(token);
+
+		if (!passwordEncoder.matches(parameter.getPassword(), reviewMember.getPassword())) {
+			throw new MemberException(MemberError.MEMBER_PASSWORD_NOT_SAME);
+		}
+
 		validateWriter(noticeId, reviewMember);
 
 		noticeRepository.deleteAllById(noticeId);
 	}
 
-	private Member validateMember(String email, String password) {
+	private Member validateMember(String token) {
 
-		Member reviewMember = memberRepository.findByEmail(email)
+		String subToken = token.substring(TOKEN_PREFIX.length());
+
+		String email = "";
+		email = tokenProvider.getUserPk(subToken);
+
+		Member member = memberRepository.findByEmail(email)
 			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
 
-		if (!passwordEncoder.matches(password, reviewMember.getPassword())) {
-			throw new MemberException(MemberError.MEMBER_PASSWORD_NOT_SAME);
-		}
-
-		return reviewMember;
+		return member;
 	}
 
 	private Notice validateWriter(Long noticeId, Member member) {
