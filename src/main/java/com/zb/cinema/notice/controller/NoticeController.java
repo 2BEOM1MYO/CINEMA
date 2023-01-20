@@ -64,7 +64,7 @@ public class NoticeController {
 	 */
 	@GetMapping("/info/{movieCode}")
 	public ViewMovieInfo getMovieByInfo(@PathVariable Long movieCode) {
-		return noticeService.getMovieByInfo(movieCode);
+		return noticeService.getInfoByMovie(movieCode);
 	}
 
 	/*

@@ -97,21 +97,16 @@ public class NoticeService {
 		}
 	}
 
-	public ViewMovieInfo getMovieByInfo(Long movieCode) {
+	public ViewMovieInfo getInfoByMovie(Long movieCode) {
 
 		Optional<Movie> movieOptional = movieRepository.findByCode(movieCode);
 		Movie movie = movieOptional.get();
 
 		Double starAvg = noticeRepository.findByNoticeMovieCode(movieCode);
 
-		return ViewMovieInfo.builder()
-			.movieTitle(movie.getTitle())
-			.actors(movie.getActors())
-			.directors(movie.getDirectors())
-			.genre(movie.getGenre())
-			.nation(movie.getNation())
-			.ratingAvg(starAvg)
-			.build();
+		return ViewMovieInfo.builder().movieTitle(movie.getTitle()).actors(movie.getActors())
+			.directors(movie.getDirectors()).genre(movie.getGenre()).nation(movie.getNation())
+			.ratingAvg(starAvg).build();
 	}
 
 	/*
