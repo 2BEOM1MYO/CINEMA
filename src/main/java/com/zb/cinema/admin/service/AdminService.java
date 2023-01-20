@@ -7,6 +7,7 @@ import com.zb.cinema.admin.model.response.AdminMemberDto;
 import com.zb.cinema.admin.model.response.AuditoriumSchedule;
 import com.zb.cinema.admin.model.request.InputAuditorium;
 import com.zb.cinema.admin.model.request.InputTheater;
+import com.zb.cinema.admin.model.response.SeatModel;
 import com.zb.cinema.admin.repository.AuditoriumRepository;
 import com.zb.cinema.admin.repository.SeatRepository;
 import com.zb.cinema.admin.repository.TheaterRepository;
@@ -19,7 +20,6 @@ import com.zb.cinema.member.repository.MemberRepository;
 import com.zb.cinema.member.type.MemberType;
 import com.zb.cinema.movie.entity.Movie;
 import com.zb.cinema.movie.model.response.ResponseMessage;
-import com.zb.cinema.movie.model.response.ResponseMessageHeader;
 import com.zb.cinema.movie.repository.MovieRepository;
 import com.zb.cinema.movie.type.ErrorCode;
 import com.zb.cinema.movie.type.MovieStatus;
@@ -75,6 +75,26 @@ public class AdminService {
             } else if (status == MovieStatus.STATUS_WILL) {
                 return ResponseMessage.fail(ErrorCode.MOVIE_ALREADY_WILL_SHOWING.getDescription());
             }
+        }
+        //상영일정이 존재할 경우 불가하도록..
+        if (status == MovieStatus.STATUS_OVER) {
+            List<Auditorium> auditoriumList =
+                auditoriumRepository.findAllByMovieAndEndDtAfter(movie, LocalDateTime.now());
+            if (auditoriumList.size() > 0) {
+                return ResponseMessage.fail("상영 일정이 존재하여 상영종료가 불가능합니다.");
+            }
+            //삭제
+            //1. 해당 상영일정의 좌석들 삭제
+            List<Auditorium> auditoriumDeleteList =
+                auditoriumRepository.findAllByMovie(movie);
+            List<Seat> seatList = new ArrayList<>();
+            for (Auditorium auditorium : auditoriumDeleteList) {
+                List<Seat> tmpSeatList = seatRepository.findAllByAuditorium(auditorium);
+                seatList.addAll(tmpSeatList);
+                seatRepository.deleteAllInBatch(seatList);
+            }
+            auditoriumRepository.deleteAllInBatch(auditoriumDeleteList);
+            //2. 상영일정 삭제
         }
 
         movie.setStatus(status);
@@ -224,6 +244,26 @@ public class AdminService {
         }
 
         return ResponseMessage.success(auditoriumSchedules);
+    }
+
+    public ResponseMessage getAuditoriumSeats(Long auditoriumId) {
+
+        Optional<Auditorium> optionalAuditorium = auditoriumRepository.findById(auditoriumId);
+        if (!optionalAuditorium.isPresent()) {
+            return ResponseMessage.fail(ErrorCode.AUDITORIUM_NOT_FOUND.getDescription());
+        }
+        Auditorium auditorium = optionalAuditorium.get();
+        List<Seat> seats = seatRepository.findAllByAuditorium(auditorium);
+        List<SeatModel> seatModels = new ArrayList<>();
+        for (Seat seat : seats) {
+            seatModels.add(SeatModel.builder()
+                .id(seat.getId())
+                .seatNum(seat.getSeatNum())
+                .isUsing(seat.isUsing())
+                .build());
+        }
+
+        return ResponseMessage.success(seatModels);
     }
 
     public ResponseMessage setMemberType(String token, String memberEmail, MemberType memberType) {

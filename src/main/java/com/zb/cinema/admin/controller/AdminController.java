@@ -54,21 +54,21 @@ public class AdminController {
     }
 
     // 상영중인 영화 조회
-    @GetMapping("/admin/movie/showing")
+    @GetMapping("/movie/showing")
     public ResponseEntity<ResponseMessage> getMovieListShowing() {
         ResponseMessage result = adminService.getMovieListByStatus(MovieStatus.STATUS_SHOWING);
         return ResponseEntity.ok(result);
     }
 
     // 상영예정 영화 조회
-    @GetMapping("/admin/movie/showing/will")
+    @GetMapping("/movie/showing/will")
     public ResponseEntity<ResponseMessage> getMovieListShowingWill() {
         ResponseMessage result = adminService.getMovieListByStatus(MovieStatus.STATUS_WILL);
         return ResponseEntity.ok(result);
     }
 
     // 상영종료 영화 조회
-    @GetMapping("/admin/movie/showing/over")
+    @GetMapping("/movie/showing/over")
     public ResponseEntity<ResponseMessage> getMovieListShowingOver() {
         ResponseMessage result = adminService.getMovieListByStatus(MovieStatus.STATUS_OVER);
         return ResponseEntity.ok(result);
@@ -90,10 +90,17 @@ public class AdminController {
         return ResponseEntity.ok(result);
     }
 
-    // 상영일정 등록
-    @GetMapping("/admin/{movieCode}/auditorium")
+    // 상영일정 조회
+    @GetMapping("/{movieCode}/auditorium")
     public ResponseEntity<ResponseMessage> auditoriumByMovie(@PathVariable Long movieCode) {
         ResponseMessage result = adminService.getAuditoriumByMovie(movieCode);
+        return ResponseEntity.ok(result);
+    }
+
+    // 상영일정 좌석 조회
+    @GetMapping("/seat/{auditoriumId}")
+    public ResponseEntity<ResponseMessage> auditoriumSeats(@PathVariable Long auditoriumId) {
+        ResponseMessage result = adminService.getAuditoriumSeats(auditoriumId);
         return ResponseEntity.ok(result);
     }
 
@@ -101,6 +108,7 @@ public class AdminController {
     @PutMapping("/admin/type/admin")
     public ResponseEntity<ResponseMessage> setAdmin(@RequestParam String memberEmail,
         @RequestHeader("token") String token) {
+
         ResponseMessage result = adminService.setMemberType(token, memberEmail,
             MemberType.ROLE_ADMIN);
         return ResponseEntity.ok(result);
