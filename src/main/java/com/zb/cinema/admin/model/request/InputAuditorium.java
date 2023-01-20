@@ -16,6 +16,6 @@ public class InputAuditorium {
     private long theaterId;
     private long movieCode;
     private long price;
-    private long seatNum;
+    private long capacity;
     private String startDt;
 }

@@ -16,4 +16,5 @@ public interface AuditoriumRepository extends JpaRepository<Auditorium, Long> {
         LocalDateTime startDt2, LocalDateTime endDt2, Theater theater);
 
     List<Auditorium> findAllByMovie(Movie movie);
+    List<Auditorium> findAllByMovieAndEndDtAfter(Movie movie, LocalDateTime time);
 }
