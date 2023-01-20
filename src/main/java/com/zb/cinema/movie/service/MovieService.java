@@ -82,12 +82,12 @@ public class MovieService {
 
         return ResponseMessage.success(movieCodeList);
     }
-
+    //영화 상세정보 저장
     public ResponseMessage saveMovieInfoByMovieCode(Long movieCode) throws ParseException {
 
         MovieInfoOutput movieInfoOutput = kobisManager.fetchMovieInfoResult(movieCode);
-
         MovieInfo movieInfo = movieInfoOutput.getMovieInfoResult().getMovieInfo();
+        // 감독, 배우, 장르, 국가는 list를 합쳐서 하나의 문자열로 저장
         List<Directors> directors = movieInfo.getDirectors();
         String director = "";
         for (Directors item : directors) {
@@ -120,7 +120,7 @@ public class MovieService {
             nation += item.getNationNm();
             nation += ", ";
         }
-
+        //날짜 포맷
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
         LocalDateTime openDt = null;
         if (movieInfo.getOpenDt() != "") {
@@ -146,7 +146,7 @@ public class MovieService {
         movieRePository.save(movie);
         return ResponseMessage.success(movie);
     }
-
+    //제목으로 코드조회
     public ResponseMessage getMovieCodeByTitle(String movieNm) {
         List<MovieCode> movieCodeList = movieCodeRepository.findByTitleContaining(movieNm);
 
@@ -155,7 +155,7 @@ public class MovieService {
         }
         return ResponseMessage.success(movieCodeList);
     }
-
+    //제목으로 영화 상세정보 조회
     public ResponseMessage movieInfoListByTitle(String movieNm) {
         List<Movie> movieList = movieRePository.findAllByTitleContaining(movieNm);
 
@@ -165,7 +165,7 @@ public class MovieService {
 
         return ResponseMessage.success(movieList);
     }
-
+    //영화 상세정보 삭제
     public ResponseMessage deleteMovieInfo(String movieNm) {
         List<Movie> movieList = movieRePository.findAllByTitleContaining(movieNm);
         if (movieList.size() > 1) {
@@ -177,7 +177,7 @@ public class MovieService {
         movieRePository.delete(movieList.get(0));
         return ResponseMessage.success(movieList);
     }
-
+    //장르로 영화 조회
     public ResponseMessage movieInfoListByGenre(String genre) {
         List<Movie> movieList;
 
@@ -192,7 +192,7 @@ public class MovieService {
 
         return ResponseMessage.success(movieList);
     }
-
+    //감독으로 영화 조회
     public ResponseMessage movieInfoListByDirector(String director) {
         List<Movie> movieList;
 
@@ -207,7 +207,7 @@ public class MovieService {
 
         return ResponseMessage.success(movieList);
     }
-
+    //배우로 영화 조회
     public ResponseMessage movieInfoListByActor(String actor) {
         List<Movie> movieList;
 

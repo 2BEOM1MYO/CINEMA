@@ -139,6 +139,7 @@ public class AdminController {
         return ResponseEntity.ok(result);
     }
 
+    // 관리자가 직접 관리자 추가
     @PostMapping("/admin/register")
     public ResponseEntity<ResponseMessage> signUpAdmin(
         @RequestBody @Valid RegisterMember.Request request,
