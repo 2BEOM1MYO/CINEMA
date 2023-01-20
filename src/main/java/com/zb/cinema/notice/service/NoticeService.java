@@ -102,7 +102,7 @@ public class NoticeService {
 		Optional<Movie> movieOptional = movieRepository.findByCode(movieCode);
 		Movie movie = movieOptional.get();
 
-		Double starAvg = noticeRepository.findByNoticeMovieCode(movieCode);
+		Double starAvg = noticeRepository.getByNoticeMovieCode(movieCode);
 
 		return ViewMovieInfo.builder().movieTitle(movie.getTitle()).actors(movie.getActors())
 			.directors(movie.getDirectors()).genre(movie.getGenre()).nation(movie.getNation())
