@@ -7,13 +7,16 @@ import com.zb.cinema.member.entity.Member;
 import com.zb.cinema.member.exception.MemberError;
 import com.zb.cinema.member.exception.MemberException;
 import com.zb.cinema.member.repository.MemberRepository;
+import com.zb.cinema.movie.entity.Movie;
 import com.zb.cinema.movie.entity.MovieCode;
 import com.zb.cinema.movie.repository.MovieCodeRepository;
+import com.zb.cinema.movie.repository.MovieRepository;
 import com.zb.cinema.notice.entity.Notice;
 import com.zb.cinema.notice.exception.NoticeError;
 import com.zb.cinema.notice.exception.NoticeException;
 import com.zb.cinema.notice.model.DeleteReview;
 import com.zb.cinema.notice.model.ModifyReview;
+import com.zb.cinema.notice.model.ViewMovieInfo;
 import com.zb.cinema.notice.model.NoticeDto;
 import com.zb.cinema.notice.model.WriteReview;
 import com.zb.cinema.notice.respository.NoticeRepository;
@@ -40,6 +43,7 @@ public class NoticeService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final MovieCodeRepository movieCodeRepository;
+	private final MovieRepository movieRepository;
 	private final TokenProvider tokenProvider;
 
 	/*
@@ -93,6 +97,23 @@ public class NoticeService {
 		}
 	}
 
+	public ViewMovieInfo getMovieByInfo(Long movieCode) {
+
+		Optional<Movie> movieOptional = movieRepository.findByCode(movieCode);
+		Movie movie = movieOptional.get();
+
+		Double starAvg = noticeRepository.findByNoticeMovieCode(movieCode);
+
+		return ViewMovieInfo.builder()
+			.movieTitle(movie.getTitle())
+			.actors(movie.getActors())
+			.directors(movie.getDirectors())
+			.genre(movie.getGenre())
+			.nation(movie.getNation())
+			.ratingAvg(starAvg)
+			.build();
+	}
+
 	/*
 	 	영화 별 후기 리스트 보기
 	 */
@@ -104,7 +125,6 @@ public class NoticeService {
 		if (notice.isEmpty()) {
 			throw new NoticeException(NoticeError.MOVIE_REVIEW_NOT_FOUND);
 		}
-
 		return notice.stream().map(NoticeDto::fromEntity).collect(Collectors.toList());
 	}
 

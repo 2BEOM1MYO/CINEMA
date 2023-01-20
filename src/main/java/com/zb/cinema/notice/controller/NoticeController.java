@@ -1,8 +1,8 @@
 package com.zb.cinema.notice.controller;
 
-import com.zb.cinema.config.jwt.TokenProvider;
 import com.zb.cinema.notice.model.DeleteReview;
 import com.zb.cinema.notice.model.ModifyReview;
+import com.zb.cinema.notice.model.ViewMovieInfo;
 import com.zb.cinema.notice.model.ReviewAllList;
 import com.zb.cinema.notice.model.ReviewByMovie;
 import com.zb.cinema.notice.model.ReviewDetail;
@@ -60,15 +60,24 @@ public class NoticeController {
 	}
 
 	/*
+		영화 정보, 별점 평균 정보 보기
+	 */
+	@GetMapping("/info/{movieCode}")
+	public ViewMovieInfo getMovieByInfo(@PathVariable Long movieCode) {
+		return noticeService.getMovieByInfo(movieCode);
+	}
+
+	/*
 	 	영화 별 후기 리스트 보기
 	 */
-	@GetMapping("/list/{movieCode}")
+	@GetMapping("/info/list/{movieCode}")
 	public List<ReviewByMovie> getReviewByMovie(@PathVariable Long movieCode) {
 
 		return noticeService.getReviewByMovie(movieCode).stream().map(
-			noticeDto -> ReviewByMovie.builder().email(noticeDto.getEmail())
-				.movieTitle(noticeDto.getMovieTitle()).contents(noticeDto.getContents())
-				.regDt(noticeDto.getRegDt()).build()).collect(Collectors.toList());
+				noticeDto -> ReviewByMovie.builder().email(noticeDto.getEmail())
+					.movieTitle(noticeDto.getMovieTitle()).contents(noticeDto.getContents())
+					.starRating(noticeDto.getStarRating()).regDt(noticeDto.getRegDt()).build())
+			.collect(Collectors.toList());
 	}
 
 	@PutMapping("/detail/{noticeId}")
