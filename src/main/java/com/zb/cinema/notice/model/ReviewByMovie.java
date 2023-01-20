@@ -17,12 +17,14 @@ public class ReviewByMovie {
 	private String movieTitle;
 	private String email;
 	private String contents;
+	private int starRating;
 	private LocalDateTime regDt;
 
 	public static ReviewByMovie from(NoticeDto noticeDto) {
 
 		return ReviewByMovie.builder().movieTitle(noticeDto.getMovieTitle())
 			.email(noticeDto.getEmail()).contents(noticeDto.getContents())
+			.starRating(noticeDto.getStarRating())
 			.regDt(noticeDto.getRegDt()).build();
 	}
 
