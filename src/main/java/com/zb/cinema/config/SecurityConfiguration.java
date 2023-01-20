@@ -39,7 +39,7 @@ public class SecurityConfiguration {
 		http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 			.authorizeRequests()
 			.antMatchers("/", "/member/signup", "/member/login", "/notice/list/**",
-				"/notice/detail/**").permitAll()
+				"/notice/detail/**","/notice/info/**").permitAll()
 			//JwtFilter 추가
 			.and()
 			.addFilterBefore(this.authenticationFilter, UsernamePasswordAuthenticationFilter.class);
