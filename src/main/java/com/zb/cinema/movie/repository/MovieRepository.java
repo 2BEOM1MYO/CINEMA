@@ -22,4 +22,6 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     List<Movie> findAllByStatus(MovieStatus status);
 
     Optional<Movie> findByCode(Long movieCode);
+
+    Movie findByTitle(String movieTitle);
 }
