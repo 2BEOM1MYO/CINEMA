@@ -1,7 +1,5 @@
 package com.zb.cinema.admin.entity;
 
-import com.zb.cinema.movie.entity.Movie;
-import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -11,17 +9,16 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Auditorium {
 
     @Id
@@ -32,19 +29,9 @@ public class Auditorium {
     @JoinColumn
     private Theater theater;
 
-    @ManyToOne
-    @JoinColumn
-    private Movie movie;
+    @Column
+    private String name;
 
     @Column
-    private long price;
-
-    @Column
-    private long seatNum;
-
-    @Column
-    private LocalDateTime startDt;
-
-    @Column
-    private LocalDateTime endDt;
+    private long capacity;
 }
