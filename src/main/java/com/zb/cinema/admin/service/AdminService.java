@@ -108,6 +108,7 @@ public class AdminService {
 
         return ResponseMessage.success(movie);
     }
+
     //상영 상태에 따른 조회
     public ResponseMessage getMovieListByStatus(MovieStatus status) {
         List<Movie> movieList = movieRepository.findAllByStatus(status);
@@ -116,6 +117,7 @@ public class AdminService {
         }
         return ResponseMessage.success(movieList);
     }
+
     //극장 추가
     public ResponseMessage registerTheater(InputTheater inputTheater) {
         String area = inputTheater.getArea();
@@ -135,6 +137,7 @@ public class AdminService {
         theaterRepository.save(theater);
         return ResponseMessage.success(theater);
     }
+
     //상영관 추가
     public ResponseMessage registerAuditorium(InputAuditorium inputAuditorium, String token) {
         //권한 확인
@@ -161,6 +164,7 @@ public class AdminService {
 
         return ResponseMessage.success(auditorium);
     }
+
     //상영일정 추가
     public ResponseMessage registerSchedule(InputSchedule inputSchedule, String token) {
         //권한 확인
@@ -169,7 +173,8 @@ public class AdminService {
         }
 
         //상영관 확인
-        Optional<Auditorium> optionalAuditorium = auditoriumRepository.findById(inputSchedule.getAuditoriumId());
+        Optional<Auditorium> optionalAuditorium = auditoriumRepository.findById(
+            inputSchedule.getAuditoriumId());
         if (!optionalAuditorium.isPresent()) {
             return ResponseMessage.fail(ErrorCode.AUDITORIUM_NOT_FOUND.getDescription());
         }
@@ -225,6 +230,7 @@ public class AdminService {
 
         return ResponseMessage.success(schedule);
     }
+
     //좌석 생성
     public List<String> makeSeats(long capacity) {
         List<String> seatList = new ArrayList<>();
@@ -252,7 +258,28 @@ public class AdminService {
 
         return seatList;
     }
-//    영화로 상영일정 조회
+
+    public ResponseMessage setSeatPrice(String token, Long id, Long price) {
+        if (!isAdmin(token)) {
+            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+        }
+
+        Optional<Seat> optionalSeat = seatRepository.findById(id);
+        if (!optionalSeat.isPresent()) {
+            return ResponseMessage.fail("좌석정보가 없습니다.");
+        }
+        Seat seat = optionalSeat.get();
+        seat.setPrice(price);
+        seatRepository.save(seat);
+        return ResponseMessage.success(
+            SeatModel.builder()
+                .id(seat.getId())
+                .seatNum(seat.getSeatNum())
+                .price(seat.getPrice())
+                .isUsing(seat.isUsing()).build());
+    }
+
+    //    영화로 상영일정 조회
     public ResponseMessage getScheduleByMovie(Long movieCode) {
         Optional<Movie> optionalMovie = movieRepository.findById(movieCode);
         if (!optionalMovie.isPresent()) {
@@ -303,6 +330,7 @@ public class AdminService {
 
         return ResponseMessage.success(seatModels);
     }
+
     //회원 권한 지정
     public ResponseMessage setMemberType(String token, String memberEmail, MemberType memberType) {
 
@@ -330,6 +358,7 @@ public class AdminService {
 
         return ResponseMessage.success();
     }
+
     //모든 회원 조회
     public ResponseMessage getAllMember(String token) {
 
@@ -345,6 +374,7 @@ public class AdminService {
 
         return ResponseMessage.success(adminMemberDtoList);
     }
+
     //관리자 추가
     public ResponseMessage registerAdmin(String token, String email, String password, String name,
         String phone) {

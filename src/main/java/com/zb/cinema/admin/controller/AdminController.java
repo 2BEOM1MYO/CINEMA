@@ -101,6 +101,12 @@ public class AdminController {
     }
 
     //좌석 가격 설정
+    @PostMapping("/admin/seat/{id}/price")
+    public ResponseEntity<ResponseMessage> setSeatPrice(
+        @RequestHeader("token") String token, @PathVariable Long id, @RequestParam Long price) {
+        ResponseMessage result = adminService.setSeatPrice(token, id, price);
+        return ResponseEntity.ok(result);
+    }
 
     // 상영일정 조회
     @GetMapping("/{movieCode}/schedule")
