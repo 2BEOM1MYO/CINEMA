@@ -11,6 +11,7 @@ import com.zb.cinema.movie.entity.Movie;
 import com.zb.cinema.movie.entity.MovieCode;
 import com.zb.cinema.movie.repository.MovieCodeRepository;
 import com.zb.cinema.movie.repository.MovieRepository;
+import com.zb.cinema.movie.type.MovieStatus;
 import com.zb.cinema.notice.entity.Notice;
 import com.zb.cinema.notice.exception.NoticeError;
 import com.zb.cinema.notice.exception.NoticeException;
@@ -56,6 +57,12 @@ public class NoticeService {
 
 		MovieCode movieTitle = movieCodeRepository.findByTitle(parameter.getTitle())
 			.orElseThrow(() -> new NoticeException(NoticeError.MOVIE_TITLE_NOT_FOUND));
+
+		Movie movieStatus = movieRepository.findByTitle(movieTitle.getTitle());
+
+		if (MovieStatus.STATUS_WILL.equals(movieStatus.getStatus())) {
+			throw new NoticeException(NoticeError.MOVIE_STATUS_WILL);
+		}
 
 		Optional<Notice> noticeOptional = noticeRepository.findByNoticeMovieAndNoticeMember(
 			movieTitle, reviewMember);
