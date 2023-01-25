@@ -11,5 +11,6 @@ public class SeatModel {
 
     private long id;
     private String seatNum;
+    private long price;
     private boolean isUsing;
 }

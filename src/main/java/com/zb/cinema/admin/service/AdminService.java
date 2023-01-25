@@ -1,14 +1,17 @@
 package com.zb.cinema.admin.service;
 
 import com.zb.cinema.admin.entity.Auditorium;
+import com.zb.cinema.admin.entity.Schedule;
 import com.zb.cinema.admin.entity.Seat;
 import com.zb.cinema.admin.entity.Theater;
+import com.zb.cinema.admin.model.request.InputSchedule;
 import com.zb.cinema.admin.model.response.AdminMemberDto;
 import com.zb.cinema.admin.model.response.AuditoriumSchedule;
 import com.zb.cinema.admin.model.request.InputAuditorium;
 import com.zb.cinema.admin.model.request.InputTheater;
 import com.zb.cinema.admin.model.response.SeatModel;
 import com.zb.cinema.admin.repository.AuditoriumRepository;
+import com.zb.cinema.admin.repository.ScheduleRepository;
 import com.zb.cinema.admin.repository.SeatRepository;
 import com.zb.cinema.admin.repository.TheaterRepository;
 import com.zb.cinema.config.jwt.TokenProvider;
@@ -38,10 +41,11 @@ public class AdminService {
 
     private final MovieRepository movieRepository;
     private final TheaterRepository theaterRepository;
-    private final AuditoriumRepository auditoriumRepository;
+    private final ScheduleRepository scheduleRepository;
     private final SeatRepository seatRepository;
     private final TokenProvider tokenProvider;
     private final MemberRepository memberRepository;
+    private final AuditoriumRepository auditoriumRepository;
 
     //토큰으로 관리자 권한 확인
     public boolean isAdmin(String token) {
@@ -80,23 +84,23 @@ public class AdminService {
         }
         //상영일정이 존재할 경우 상영 종료설정 불가
         if (status == MovieStatus.STATUS_OVER) {
-            List<Auditorium> auditoriumList =
-                auditoriumRepository.findAllByMovieAndEndDtAfter(movie, LocalDateTime.now());
-            if (auditoriumList.size() > 0) {
+            List<Schedule> scheduleList =
+                scheduleRepository.findAllByMovieAndEndDtAfter(movie, LocalDateTime.now());
+            if (scheduleList.size() > 0) {
                 return ResponseMessage.fail("상영 일정이 존재하여 상영종료가 불가능합니다.");
             }
             //상영 종료 설정 시 관련 데이터 삭제
             //1. 해당 상영일정의 좌석들 삭제
             //2. 상영일정 삭제
-            List<Auditorium> auditoriumDeleteList =
-                auditoriumRepository.findAllByMovie(movie);
+            List<Schedule> scheduleDeleteList =
+                scheduleRepository.findAllByMovie(movie);
             List<Seat> seatList = new ArrayList<>();
-            for (Auditorium auditorium : auditoriumDeleteList) {
-                List<Seat> tmpSeatList = seatRepository.findAllByAuditorium(auditorium);
+            for (Schedule schedule : scheduleDeleteList) {
+                List<Seat> tmpSeatList = seatRepository.findAllBySchedule(schedule);
                 seatList.addAll(tmpSeatList);
                 seatRepository.deleteAllInBatch(seatList);
             }
-            auditoriumRepository.deleteAllInBatch(auditoriumDeleteList);
+            scheduleRepository.deleteAllInBatch(scheduleDeleteList);
         }
 
         movie.setStatus(status);
@@ -104,6 +108,7 @@ public class AdminService {
 
         return ResponseMessage.success(movie);
     }
+
     //상영 상태에 따른 조회
     public ResponseMessage getMovieListByStatus(MovieStatus status) {
         List<Movie> movieList = movieRepository.findAllByStatus(status);
@@ -112,6 +117,7 @@ public class AdminService {
         }
         return ResponseMessage.success(movieList);
     }
+
     //극장 추가
     public ResponseMessage registerTheater(InputTheater inputTheater) {
         String area = inputTheater.getArea();
@@ -131,66 +137,100 @@ public class AdminService {
         theaterRepository.save(theater);
         return ResponseMessage.success(theater);
     }
-    //상영일정 추가
+
+    //상영관 추가
     public ResponseMessage registerAuditorium(InputAuditorium inputAuditorium, String token) {
         //권한 확인
         if (!isAdmin(token)) {
             return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
-        //극장 확인
         Optional<Theater> optionalTheater = theaterRepository.findById(
             inputAuditorium.getTheaterId());
         if (!optionalTheater.isPresent()) {
             return ResponseMessage.fail(ErrorCode.THEATER_NOT_FOUND.getDescription());
         }
         Theater theater = optionalTheater.get();
-        //영화 확인
-        Optional<Movie> optionalMovie = movieRepository.findById(inputAuditorium.getMovieCode());
-        if (!optionalMovie.isPresent()) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
-        }
 
-        Movie movie = optionalMovie.get();
-        if (movie.getStatus() != MovieStatus.STATUS_SHOWING) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_SHOWING.getDescription());
-        }
-        //시간 값 포맷
-        LocalDateTime startDt = LocalDateTime.parse(inputAuditorium.getStartDt(),
-            DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
-        LocalDateTime endDt = startDt.plusMinutes(movie.getRunTime());
-        //이미 존재하는 상영일정에 대해 (시작시간-30 ~ 종료시간+30) 밖으로만 등록 가능
-        List<Auditorium> auditoriumList = auditoriumRepository.findAllByStartDtBetweenAndTheaterOrEndDtBetweenAndTheater(
-            startDt.minusMinutes(30), endDt.plusMinutes(30), theater,
-            startDt.minusMinutes(30), endDt.plusMinutes(30), theater);
-        if (auditoriumList.size() > 0) {
+        if (auditoriumRepository.findByTheaterAndAndName(theater,
+            inputAuditorium.getName()).isPresent()) {
             return ResponseMessage.fail(ErrorCode.AUDITORIUM_ALREADY_EXIST.getDescription());
         }
-        //상영일정의 좌석 설정
-        List<String> seatNmList = makeSeats(inputAuditorium.getCapacity());
 
         Auditorium auditorium = Auditorium.builder()
             .theater(theater)
+            .name(inputAuditorium.getName())
+            .capacity(inputAuditorium.getCapacity()).build();
+        auditoriumRepository.save(auditorium);
+
+        return ResponseMessage.success(auditorium);
+    }
+
+    //상영일정 추가
+    public ResponseMessage registerSchedule(InputSchedule inputSchedule, String token) {
+        //권한 확인
+        if (!isAdmin(token)) {
+            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+        }
+
+        //상영관 확인
+        Optional<Auditorium> optionalAuditorium = auditoriumRepository.findById(
+            inputSchedule.getAuditoriumId());
+        if (!optionalAuditorium.isPresent()) {
+            return ResponseMessage.fail(ErrorCode.AUDITORIUM_NOT_FOUND.getDescription());
+        }
+        Auditorium auditorium = optionalAuditorium.get();
+
+        //영화 확인
+        Optional<Movie> optionalMovie = movieRepository.findById(inputSchedule.getMovieCode());
+        if (!optionalMovie.isPresent()) {
+            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
+        }
+        Movie movie = optionalMovie.get();
+
+        if (movie.getStatus() != MovieStatus.STATUS_SHOWING) {
+            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_SHOWING.getDescription());
+        }
+
+        //시간 값 포맷
+        LocalDateTime startDt = LocalDateTime.parse(inputSchedule.getStartDt(),
+            DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
+        LocalDateTime endDt = startDt.plusMinutes(movie.getRunTime());
+        //이미 존재하는 상영일정에 대해 (시작시간-30 ~ 종료시간+30) 밖으로만 등록 가능
+        List<Schedule> scheduleList = scheduleRepository.findAllByStartDtBetweenAndAuditoriumOrEndDtBetweenAndAuditorium(
+            startDt.minusMinutes(30), endDt.plusMinutes(30), auditorium,
+            startDt.minusMinutes(30), endDt.plusMinutes(30), auditorium);
+        if (scheduleList.size() > 0) {
+            return ResponseMessage.fail(ErrorCode.SCHEDULE_ALREADY_EXIST.getDescription());
+        }
+
+        Schedule schedule = Schedule.builder()
+            .auditorium(auditorium)
             .movie(movie)
-            .price(inputAuditorium.getPrice())
-            .seatNum(inputAuditorium.getCapacity())
             .startDt(startDt)
             .endDt(endDt)
             .build();
+
+        //상영일정의 좌석 설정
+        List<String> seatNmList = makeSeats(auditorium.getCapacity());
 
         List<Seat> seatList = new ArrayList<>();
         for (String seatNm : seatNmList) {
             seatList.add(Seat.builder()
                 .auditorium(auditorium)
+                .schedule(schedule)
                 .seatNum(seatNm)
                 .isUsing(false)
+                .price(13000)
                 .build());
         }
 
-        auditoriumRepository.save(auditorium);
+        scheduleRepository.save(schedule);
+
         seatRepository.saveAll(seatList);
 
-        return ResponseMessage.success(auditorium);
+        return ResponseMessage.success(schedule);
     }
+
     //좌석 생성
     public List<String> makeSeats(long capacity) {
         List<String> seatList = new ArrayList<>();
@@ -218,25 +258,46 @@ public class AdminService {
 
         return seatList;
     }
-    //영화로 상영일정 조회
-    public ResponseMessage getAuditoriumByMovie(Long movieCode) {
+
+    public ResponseMessage setSeatPrice(String token, Long id, Long price) {
+        if (!isAdmin(token)) {
+            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+        }
+
+        Optional<Seat> optionalSeat = seatRepository.findById(id);
+        if (!optionalSeat.isPresent()) {
+            return ResponseMessage.fail("좌석정보가 없습니다.");
+        }
+        Seat seat = optionalSeat.get();
+        seat.setPrice(price);
+        seatRepository.save(seat);
+        return ResponseMessage.success(
+            SeatModel.builder()
+                .id(seat.getId())
+                .seatNum(seat.getSeatNum())
+                .price(seat.getPrice())
+                .isUsing(seat.isUsing()).build());
+    }
+
+    //    영화로 상영일정 조회
+    public ResponseMessage getScheduleByMovie(Long movieCode) {
         Optional<Movie> optionalMovie = movieRepository.findById(movieCode);
         if (!optionalMovie.isPresent()) {
             return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        List<Auditorium> auditoriumList = auditoriumRepository.findAllByMovie(optionalMovie.get());
-        if (auditoriumList.size() < 1) {
+        List<Schedule> scheduleList = scheduleRepository.findAllByMovie(optionalMovie.get());
+        if (scheduleList.size() < 1) {
             return ResponseMessage.fail("해당 영화는 상영 일정이 없습니다.");
         }
 
         List<AuditoriumSchedule> auditoriumSchedules = new ArrayList<>();
-        for (Auditorium item : auditoriumList) {
-            long theater_id = item.getTheater().getId();
-            Theater theater = theaterRepository.findById(theater_id).get();
+        for (Schedule item : scheduleList) {
+            long theaterId = item.getAuditorium().getTheater().getId();
+            Theater theater = theaterRepository.findById(theaterId).get();
             auditoriumSchedules.add(AuditoriumSchedule.builder()
-                .theaterId(theater_id)
-                .auditoriumId(item.getId())
+                .theaterId(theaterId)
+                .auditoriumNm(item.getAuditorium().getName())
                 .theaterNm(theater.getArea() + " " + theater.getCity() + " " + theater.getName())
                 .movieId(item.getMovie().getCode())
                 .title(item.getMovie().getTitle())
@@ -247,26 +308,29 @@ public class AdminService {
 
         return ResponseMessage.success(auditoriumSchedules);
     }
-    // 상영일정의 좌석 조회
-    public ResponseMessage getAuditoriumSeats(Long auditoriumId) {
 
-        Optional<Auditorium> optionalAuditorium = auditoriumRepository.findById(auditoriumId);
+    // 상영일정의 좌석 조회
+    public ResponseMessage getAuditoriumSeats(Long scheduleId) {
+
+        Optional<Schedule> optionalAuditorium = scheduleRepository.findById(scheduleId);
         if (!optionalAuditorium.isPresent()) {
-            return ResponseMessage.fail(ErrorCode.AUDITORIUM_NOT_FOUND.getDescription());
+            return ResponseMessage.fail(ErrorCode.SCHEDULE_NOT_FOUND.getDescription());
         }
-        Auditorium auditorium = optionalAuditorium.get();
-        List<Seat> seats = seatRepository.findAllByAuditorium(auditorium);
+        Schedule schedule = optionalAuditorium.get();
+        List<Seat> seats = seatRepository.findAllBySchedule(schedule);
         List<SeatModel> seatModels = new ArrayList<>();
         for (Seat seat : seats) {
             seatModels.add(SeatModel.builder()
                 .id(seat.getId())
                 .seatNum(seat.getSeatNum())
+                .price(seat.getPrice())
                 .isUsing(seat.isUsing())
                 .build());
         }
 
         return ResponseMessage.success(seatModels);
     }
+
     //회원 권한 지정
     public ResponseMessage setMemberType(String token, String memberEmail, MemberType memberType) {
 
@@ -294,6 +358,7 @@ public class AdminService {
 
         return ResponseMessage.success();
     }
+
     //모든 회원 조회
     public ResponseMessage getAllMember(String token) {
 
@@ -309,6 +374,7 @@ public class AdminService {
 
         return ResponseMessage.success(adminMemberDtoList);
     }
+
     //관리자 추가
     public ResponseMessage registerAdmin(String token, String email, String password, String name,
         String phone) {

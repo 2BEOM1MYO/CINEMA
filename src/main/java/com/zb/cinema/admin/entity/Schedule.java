@@ -1,5 +1,7 @@
 package com.zb.cinema.admin.entity;
 
+import com.zb.cinema.movie.entity.Movie;
+import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -19,7 +21,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class Seat {
+public class Schedule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,14 +33,11 @@ public class Seat {
 
     @ManyToOne
     @JoinColumn
-    private Schedule schedule;
+    private Movie movie;
 
     @Column
-    private String seatNum;
+    private LocalDateTime startDt;
 
     @Column
-    private boolean isUsing;
-
-    @Column
-    private long price;
+    private LocalDateTime endDt;
 }
