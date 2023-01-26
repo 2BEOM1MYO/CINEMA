@@ -5,8 +5,6 @@ spring:
     username: ENC(JHLL2tUxydj1BITANaFXhA==)
     password: ENC(iPGny+DngG5+rPczq/yziQ==)
 
-
-
   jpa:
     hibernate:
       ddl-auto: update
