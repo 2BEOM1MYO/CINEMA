@@ -2,7 +2,6 @@ package com.zb.cinema.member.model;
 
 import com.zb.cinema.member.type.MemberType;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

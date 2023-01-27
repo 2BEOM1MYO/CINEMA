@@ -32,8 +32,7 @@ public class MemberController {
 	public RegisterMember.Response signUp(@RequestBody @Valid RegisterMember.Request request) {
 
 		return RegisterMember.Response.from(
-			memberService.register(request.getEmail(), request.getPassword(), request.getName(),
-				request.getPhone()));
+			memberService.register(request));
 	}
 
 	@PostMapping("/login")
