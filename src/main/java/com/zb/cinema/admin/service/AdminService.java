@@ -391,7 +391,7 @@ public class AdminService {
 
         String pw = BCrypt.hashpw(password, BCrypt.gensalt());
 
-        return ResponseMessage.success(MemberDto.fromEntity(memberRepository.save(
+        return ResponseMessage.success(MemberDto.from(memberRepository.save(
             Member.builder().email(email).password(pw).name(name).phone(phone)
                 .regDt(LocalDateTime.now()).type(MemberType.ROLE_ADMIN).build())));
     }
