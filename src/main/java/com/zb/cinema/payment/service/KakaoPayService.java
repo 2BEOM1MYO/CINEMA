@@ -1,7 +1,11 @@
 package com.zb.cinema.payment.service;
 
 import com.zb.cinema.admin.entity.Auditorium;
+import com.zb.cinema.admin.entity.Schedule;
+import com.zb.cinema.admin.entity.Seat;
 import com.zb.cinema.admin.repository.AuditoriumRepository;
+import com.zb.cinema.admin.repository.ScheduleRepository;
+import com.zb.cinema.admin.repository.SeatRepository;
 import com.zb.cinema.movie.entity.Movie;
 import com.zb.cinema.movie.repository.MovieCodeRepository;
 import com.zb.cinema.movie.repository.MovieRepository;
@@ -37,6 +41,8 @@ public class KakaoPayService {
 	private KakaoPayApprovalVO kakaoPayApprovalVO;
 	private final MovieRepository movieRepository;
 	private final AuditoriumRepository auditoriumRepository;
+	private final ScheduleRepository scheduleRepository;
+	private final SeatRepository seatRepository;
 
 
 	public KakaoPayReadyVO kakaoPayReadyUrl(TicketInput parameter, Ticket ticket) {
@@ -45,17 +51,32 @@ public class KakaoPayService {
 		headers.add("Authorization", "KakaoAK " + admin_key);
 		headers.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8");
 
+		// 결제 상품 이름 찾기
 		Optional<Movie> optionalMovie = movieRepository.findById(ticket.getMovieCode());
 		if(optionalMovie.isEmpty()) {
 			throw new TicketException(TicketError.MOVIE_NOT_FOUND);
 		}
 		Movie movie = optionalMovie.get();
 
-		Optional<Auditorium> optionalAuditorium = auditoriumRepository.findById(parameter.getAuditoriumId());
+		// 가격 찾기
+		Optional<Schedule> optionalSchedule = scheduleRepository.findById(parameter.getScheduleId());
+		if(optionalSchedule.isEmpty()) {
+			throw new TicketException(TicketError.SCHEDULE_NOT_FOUND);
+		}
+		Schedule schedule = optionalSchedule.get();
+
+		Optional<Auditorium> optionalAuditorium = auditoriumRepository.findById(schedule.getAuditorium().getId());
 		if(optionalAuditorium.isEmpty()) {
 			throw new TicketException(TicketError.AUDITORIUM_NOT_FOUND);
 		}
 		Auditorium auditorium = optionalAuditorium.get();
+
+		Optional<Seat> optionalSeat = seatRepository.findBySeatNumAndAuditoriumId(
+			parameter.getSeat(), auditorium.getId());
+		if(optionalSeat.isEmpty()) {
+			throw new TicketException(TicketError.SEAT_NOT_FOUND);
+		}
+		Seat seat = optionalSeat.get();
 
 
 		// 서버로 요청할 Body
@@ -65,8 +86,8 @@ public class KakaoPayService {
 		params.add("partner_user_id", parameter.getPartner_user_id());
 		params.add("item_name", movie.getTitle());
 		params.add("quantity", String.valueOf(1));
-		params.add("total_amount", String.valueOf(auditorium.getPrice()));
-		params.add("tax_free_amount", String.valueOf(auditorium.getPrice()));
+		params.add("total_amount", String.valueOf(seat.getPrice()));
+		params.add("tax_free_amount", String.valueOf(seat.getPrice()));
 		params.add("approval_url", "http://localhost:8080/ticketing/ticketingSuccess");
 		params.add("cancel_url", "http://localhost:8080/kakaoPayCancel");
 		params.add("fail_url", "http://localhost:8080/kakaoPaySuccessFail");
@@ -99,11 +120,24 @@ public class KakaoPayService {
 		headers.add("Authorization", "KakaoAK " + admin_key);
 		headers.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8");
 
-		Optional<Auditorium> optionalAuditorium = auditoriumRepository.findById(parameter.getAuditoriumId());
+		Optional<Schedule> optionalSchedule = scheduleRepository.findById(parameter.getScheduleId());
+		if(optionalSchedule.isEmpty()) {
+			throw new TicketException(TicketError.SCHEDULE_NOT_FOUND);
+		}
+		Schedule schedule = optionalSchedule.get();
+
+		Optional<Auditorium> optionalAuditorium = auditoriumRepository.findById(schedule.getAuditorium().getId());
 		if(optionalAuditorium.isEmpty()) {
 			throw new TicketException(TicketError.AUDITORIUM_NOT_FOUND);
 		}
 		Auditorium auditorium = optionalAuditorium.get();
+
+		Optional<Seat> optionalSeat = seatRepository.findBySeatNumAndAuditoriumId(
+			parameter.getSeat(), auditorium.getId());
+		if(optionalSeat.isEmpty()) {
+			throw new TicketException(TicketError.SEAT_NOT_FOUND);
+		}
+		Seat seat = optionalSeat.get();
 
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add("cid", parameter.getCid());
@@ -111,7 +145,7 @@ public class KakaoPayService {
 		params.add("partner_order_id", parameter.getPartner_order_id());
 		params.add("partner_user_id", parameter.getPartner_user_id());
 		params.add("pg_token", pg_token);
-		params.add("total_amount", String.valueOf(auditorium.getPrice()));
+		params.add("total_amount", String.valueOf(seat.getPrice()));
 
 		return kakaoPayApprovalInfo(pg_token ,headers, params);
 	}
@@ -130,4 +164,7 @@ public class KakaoPayService {
 		}
 		return null;
 	}
+
+
+
 }

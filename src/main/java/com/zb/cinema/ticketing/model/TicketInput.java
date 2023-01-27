@@ -10,6 +10,6 @@ public class TicketInput {
 	private String partner_order_id;
 	private String partner_user_id;
 
-	private Long auditoriumId;		// 나머지 정보는 auditorium에
+	private Long scheduleId;		// 나머지 정보는 auditorium에
 	private String seat;
 }

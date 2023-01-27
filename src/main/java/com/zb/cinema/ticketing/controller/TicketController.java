@@ -9,6 +9,7 @@ import com.zb.cinema.ticketing.model.TicketInput;
 import com.zb.cinema.ticketing.service.TicketService;
 import java.security.Principal;
 import java.time.LocalDateTime;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +33,7 @@ public class TicketController {
 
 
 	@PostMapping("/ticket")
-	public KakaoPayReadyVO ticketing(@RequestBody TicketInput parameter, Principal principal) {
+	public KakaoPayReadyVO ticketing(@RequestBody @Valid TicketInput parameter, Principal principal) {
 		// 예매 내역 사전 정보 생성
 		ticketInput = parameter;
 		Ticket ticket = ticketService.readyTicketing(parameter, principal);
@@ -49,6 +50,8 @@ public class TicketController {
 	public KakaoPayApprovalVO paymentSuccess(@RequestParam String pg_token) {
 
 		KakaoPayApprovalVO result = kakaoPayService.kakaoPayApprovalUrl(pg_token, ticketInput, kakaoPayReadyVO);
+		ticketService.savePay(result);
+		saTicket.setTid(result.getTid());
 		ticketService.saveTicket(saTicket);
 
 		return result;
@@ -56,6 +59,6 @@ public class TicketController {
 
 	@GetMapping("/ticketCancel")
 	public void ticketCancel(@RequestParam Long ticketId) {
-
+		ticketService.cancelTicket(ticketId);
 	}
 }
