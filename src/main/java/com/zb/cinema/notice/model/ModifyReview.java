@@ -17,12 +17,6 @@ public class ModifyReview {
 	@AllArgsConstructor
 	public static class Request {
 
-		@NotBlank(message = "작성자 ID(e-mail)을 입력해주세요.")
-		private String email;
-
-		@NotBlank(message = "작성자 본인의 비밀번호를 입력해주세요.")
-		private String password;
-
 		@NotBlank(message = "수정 할 내용을 입력해주세요.")
 		private String contents;
 

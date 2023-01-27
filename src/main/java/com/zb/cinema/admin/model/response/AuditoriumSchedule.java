@@ -15,7 +15,7 @@ import lombok.Setter;
 public class AuditoriumSchedule {
 
     private long theaterId;
-    private long auditoriumId;
+    private String auditoriumNm;
     private String theaterNm;
     private long movieId;
     private String title;

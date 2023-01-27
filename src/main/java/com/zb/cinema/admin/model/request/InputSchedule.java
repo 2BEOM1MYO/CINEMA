@@ -11,9 +11,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class InputAuditorium {
+public class InputSchedule {
 
-    private long theaterId;
-    private String name;
-    private long capacity;
+    private Long auditoriumId;
+    private Long movieCode;
+    private String startDt;
 }

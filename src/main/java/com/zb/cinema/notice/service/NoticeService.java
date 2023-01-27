@@ -1,16 +1,23 @@
 package com.zb.cinema.notice.service;
 
+import static com.zb.cinema.config.jwt.JwtAuthenticationFilter.TOKEN_PREFIX;
+
+import com.zb.cinema.config.jwt.TokenProvider;
 import com.zb.cinema.member.entity.Member;
 import com.zb.cinema.member.exception.MemberError;
 import com.zb.cinema.member.exception.MemberException;
 import com.zb.cinema.member.repository.MemberRepository;
+import com.zb.cinema.movie.entity.Movie;
 import com.zb.cinema.movie.entity.MovieCode;
 import com.zb.cinema.movie.repository.MovieCodeRepository;
+import com.zb.cinema.movie.repository.MovieRepository;
+import com.zb.cinema.movie.type.MovieStatus;
 import com.zb.cinema.notice.entity.Notice;
 import com.zb.cinema.notice.exception.NoticeError;
 import com.zb.cinema.notice.exception.NoticeException;
 import com.zb.cinema.notice.model.DeleteReview;
 import com.zb.cinema.notice.model.ModifyReview;
+import com.zb.cinema.notice.model.ViewMovieInfo;
 import com.zb.cinema.notice.model.NoticeDto;
 import com.zb.cinema.notice.model.WriteReview;
 import com.zb.cinema.notice.respository.NoticeRepository;
@@ -19,8 +26,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -39,17 +44,25 @@ public class NoticeService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final MovieCodeRepository movieCodeRepository;
+	private final MovieRepository movieRepository;
+	private final TokenProvider tokenProvider;
 
 	/*
 	 	리뷰 등록
 	 */
-	public NoticeDto writeReview(WriteReview.Request parameter) {
+	@Transactional
+	public NoticeDto writeReview(String token, WriteReview.Request parameter) {
 
-		Member reviewMember = memberRepository.findByEmail(parameter.getEmail())
-			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
+		Member reviewMember = validateMember(token);
 
 		MovieCode movieTitle = movieCodeRepository.findByTitle(parameter.getTitle())
 			.orElseThrow(() -> new NoticeException(NoticeError.MOVIE_TITLE_NOT_FOUND));
+
+		Movie movieStatus = movieRepository.findByTitle(movieTitle.getTitle());
+
+		if (MovieStatus.STATUS_WILL.equals(movieStatus.getStatus())) {
+			throw new NoticeException(NoticeError.MOVIE_STATUS_WILL);
+		}
 
 		Optional<Notice> noticeOptional = noticeRepository.findByNoticeMovieAndNoticeMember(
 			movieTitle, reviewMember);
@@ -91,6 +104,18 @@ public class NoticeService {
 		}
 	}
 
+	public ViewMovieInfo getInfoByMovie(Long movieCode) {
+
+		Optional<Movie> movieOptional = movieRepository.findByCode(movieCode);
+		Movie movie = movieOptional.get();
+
+		Double starAvg = noticeRepository.getByNoticeMovieCode(movieCode);
+
+		return ViewMovieInfo.builder().movieTitle(movie.getTitle()).actors(movie.getActors())
+			.directors(movie.getDirectors()).genre(movie.getGenre()).nation(movie.getNation())
+			.ratingAvg(starAvg).build();
+	}
+
 	/*
 	 	영화 별 후기 리스트 보기
 	 */
@@ -102,16 +127,16 @@ public class NoticeService {
 		if (notice.isEmpty()) {
 			throw new NoticeException(NoticeError.MOVIE_REVIEW_NOT_FOUND);
 		}
-
 		return notice.stream().map(NoticeDto::fromEntity).collect(Collectors.toList());
 	}
 
 	/*
 	 	후기 수정 (내용, 별점 수정 가능)
 	 */
-	public NoticeDto modifyReview(Long noticeId, ModifyReview.Request parameter) {
+	@Transactional
+	public NoticeDto modifyReview(Long noticeId, String token, ModifyReview.Request parameter) {
 
-		Member reviewMember = validateMember(parameter.getEmail(), parameter.getPassword());
+		Member reviewMember = validateMember(token);
 		Notice notice = validateWriter(noticeId, reviewMember);
 
 		notice.setContents(parameter.getContents());
@@ -126,24 +151,28 @@ public class NoticeService {
 		후기 삭제하기
 	 */
 	@Transactional
-	public void deleteReview(Long noticeId, DeleteReview parameter) {
+	public void deleteReview(Long noticeId, String token, DeleteReview parameter) {
 
-		Member reviewMember = validateMember(parameter.getEmail(), parameter.getPassword());
+		Member reviewMember = validateMember(token);
+
+		if (!passwordEncoder.matches(parameter.getPassword(), reviewMember.getPassword())) {
+			throw new MemberException(MemberError.MEMBER_PASSWORD_NOT_SAME);
+		}
+
 		validateWriter(noticeId, reviewMember);
 
 		noticeRepository.deleteAllById(noticeId);
 	}
 
-	private Member validateMember(String email, String password) {
+	private Member validateMember(String token) {
 
-		Member reviewMember = memberRepository.findByEmail(email)
+		String subToken = token.substring(TOKEN_PREFIX.length());
+
+		String email = "";
+		email = tokenProvider.getUserPk(subToken);
+
+		return memberRepository.findByEmail(email)
 			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
-
-		if (!passwordEncoder.matches(password, reviewMember.getPassword())) {
-			throw new MemberException(MemberError.MEMBER_PASSWORD_NOT_SAME);
-		}
-
-		return reviewMember;
 	}
 
 	private Notice validateWriter(Long noticeId, Member member) {

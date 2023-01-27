@@ -15,7 +15,10 @@ public enum ErrorCode {
     ,MOVIE_ALREADY_WILL_SHOWING("이미 영화가 상영 예정입니다.")
     ,THEATER_NOT_FOUND("극장이 없습니다.")
     ,MOVIE_NOT_SHOWING("상영중인 영화가 아닙니다.")
-    ,AUDITORIUM_ALREADY_EXIST("해당 상영관에 이미 일정이 있습니다.")
+    ,AUDITORIUM_ALREADY_EXIST("해당 상영관이 존재합니다.")
+    ,AUDITORIUM_NOT_FOUND("상영관이 없습니다.")
+    ,SCHEDULE_NOT_FOUND("상영 일정이 없습니다.")
+    ,SCHEDULE_ALREADY_EXIST("이미 상영일정이 있습니다.")
     ,INVALID_ACCESS_MEMBER("일반 회원은 해당 권한이 없습니다.")
 
     ;

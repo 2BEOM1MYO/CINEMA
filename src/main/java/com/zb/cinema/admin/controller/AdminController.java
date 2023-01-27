@@ -1,6 +1,7 @@
 package com.zb.cinema.admin.controller;
 
 import com.zb.cinema.admin.model.request.InputAuditorium;
+import com.zb.cinema.admin.model.request.InputSchedule;
 import com.zb.cinema.admin.model.request.InputTheater;
 import com.zb.cinema.admin.service.AdminService;
 import com.zb.cinema.member.model.RegisterMember;
@@ -54,21 +55,21 @@ public class AdminController {
     }
 
     // 상영중인 영화 조회
-    @GetMapping("/admin/movie/showing")
+    @GetMapping("/movie/showing")
     public ResponseEntity<ResponseMessage> getMovieListShowing() {
         ResponseMessage result = adminService.getMovieListByStatus(MovieStatus.STATUS_SHOWING);
         return ResponseEntity.ok(result);
     }
 
     // 상영예정 영화 조회
-    @GetMapping("/admin/movie/showing/will")
+    @GetMapping("/movie/showing/will")
     public ResponseEntity<ResponseMessage> getMovieListShowingWill() {
         ResponseMessage result = adminService.getMovieListByStatus(MovieStatus.STATUS_WILL);
         return ResponseEntity.ok(result);
     }
 
     // 상영종료 영화 조회
-    @GetMapping("/admin/movie/showing/over")
+    @GetMapping("/movie/showing/over")
     public ResponseEntity<ResponseMessage> getMovieListShowingOver() {
         ResponseMessage result = adminService.getMovieListByStatus(MovieStatus.STATUS_OVER);
         return ResponseEntity.ok(result);
@@ -81,7 +82,7 @@ public class AdminController {
         return ResponseEntity.ok(result);
     }
 
-    // 상영관(상영일정) 등록
+    // 상영관 등록
     @PostMapping("/admin/register/auditorium")
     public ResponseEntity<ResponseMessage> registerAuditorium(
         @RequestBody InputAuditorium inputAuditorium,
@@ -90,10 +91,34 @@ public class AdminController {
         return ResponseEntity.ok(result);
     }
 
-    // 상영일정 등록
-    @GetMapping("/admin/{movieCode}/auditorium")
+    // 일정 등록
+    @PostMapping("/admin/register/schedule")
+    public ResponseEntity<ResponseMessage> registerSchedule(
+        @RequestBody InputSchedule inputSchedule,
+        @RequestHeader("token") String token) {
+        ResponseMessage result = adminService.registerSchedule(inputSchedule, token);
+        return ResponseEntity.ok(result);
+    }
+
+    //좌석 가격 설정
+    @PostMapping("/admin/seat/{id}/price")
+    public ResponseEntity<ResponseMessage> setSeatPrice(
+        @RequestHeader("token") String token, @PathVariable Long id, @RequestParam Long price) {
+        ResponseMessage result = adminService.setSeatPrice(token, id, price);
+        return ResponseEntity.ok(result);
+    }
+
+    // 상영일정 조회
+    @GetMapping("/{movieCode}/schedule")
     public ResponseEntity<ResponseMessage> auditoriumByMovie(@PathVariable Long movieCode) {
-        ResponseMessage result = adminService.getAuditoriumByMovie(movieCode);
+        ResponseMessage result = adminService.getScheduleByMovie(movieCode);
+        return ResponseEntity.ok(result);
+    }
+
+    // 상영일정 좌석 조회
+    @GetMapping("/seat/{scheduleId}")
+    public ResponseEntity<ResponseMessage> auditoriumSeats(@PathVariable Long scheduleId) {
+        ResponseMessage result = adminService.getAuditoriumSeats(scheduleId);
         return ResponseEntity.ok(result);
     }
 
@@ -101,6 +126,7 @@ public class AdminController {
     @PutMapping("/admin/type/admin")
     public ResponseEntity<ResponseMessage> setAdmin(@RequestParam String memberEmail,
         @RequestHeader("token") String token) {
+
         ResponseMessage result = adminService.setMemberType(token, memberEmail,
             MemberType.ROLE_ADMIN);
         return ResponseEntity.ok(result);
@@ -131,6 +157,7 @@ public class AdminController {
         return ResponseEntity.ok(result);
     }
 
+    // 관리자가 직접 관리자 추가
     @PostMapping("/admin/register")
     public ResponseEntity<ResponseMessage> signUpAdmin(
         @RequestBody @Valid RegisterMember.Request request,
