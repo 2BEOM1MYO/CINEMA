@@ -31,8 +31,11 @@ public class MemberService implements UserDetailsService {
 
 	public MemberDto register(RegisterMember.Request parameter) {
 
-		memberRepository.findByEmail(parameter.getEmail())
-			.orElseThrow(() -> new MemberException(MemberError.MEMBER_ALREADY_EMAIL));
+		Optional<Member> optionalMember = memberRepository.findByEmail(parameter.getEmail());
+
+		if (optionalMember.isPresent()) {
+			throw new MemberException(MemberError.MEMBER_ALREADY_EMAIL);
+		}
 
 		String pw = BCrypt.hashpw(parameter.getPassword(), BCrypt.gensalt());
 
