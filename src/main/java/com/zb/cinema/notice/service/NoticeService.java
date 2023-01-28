@@ -94,14 +94,10 @@ public class NoticeService {
 	 */
 	public NoticeDto getReviewDetail(Long noticeId) {
 
-		Optional<Notice> noticeOptional = noticeRepository.findById(noticeId);
+		Notice notice = noticeRepository.findById(noticeId)
+			.orElseThrow(() -> new NoticeException(NoticeError.MOVIE_REVIEW_ID_NOT_FOUND));
 
-		if (noticeOptional.isEmpty()) {
-			throw new NoticeException(NoticeError.MOVIE_REVIEW_ID_NOT_FOUND);
-
-		} else {
-			return NoticeDto.fromEntity(noticeOptional.get());
-		}
+		return NoticeDto.fromEntity(notice);
 	}
 
 	public ViewMovieInfo getInfoByMovie(Long movieCode) {
@@ -177,13 +173,8 @@ public class NoticeService {
 
 	private Notice validateWriter(Long noticeId, Member member) {
 
-		Optional<Notice> optionalNotice = noticeRepository.findById(noticeId);
-
-		if (optionalNotice.isEmpty()) {
-			throw new NoticeException(NoticeError.MOVIE_REVIEW_ID_NOT_FOUND);
-		}
-
-		Notice notice = optionalNotice.get();
+		Notice notice = noticeRepository.findById(noticeId)
+			.orElseThrow(() -> new  NoticeException(NoticeError.MOVIE_REVIEW_ID_NOT_FOUND));
 
 		if (!Objects.equals(notice.getNoticeMember().getEmail(), member.getEmail())) {
 			throw new NoticeException(NoticeError.MOVIE_REVIEW_USER_UN_MATCH);
