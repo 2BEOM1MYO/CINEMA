@@ -1,10 +1,9 @@
-package com.zb.cinema.payment.model;
+package com.zb.cinema.payment.entity;
 
 import com.zb.cinema.payment.entity.Amount;
 import com.zb.cinema.payment.entity.Card;
 import java.util.Date;
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -12,15 +11,17 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class KakaoPayApprovalVO {
+public class KakaoPayApproval {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

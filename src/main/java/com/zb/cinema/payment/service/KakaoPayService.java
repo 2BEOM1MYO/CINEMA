@@ -7,16 +7,21 @@ import com.zb.cinema.admin.repository.AuditoriumRepository;
 import com.zb.cinema.admin.repository.ScheduleRepository;
 import com.zb.cinema.admin.repository.SeatRepository;
 import com.zb.cinema.movie.entity.Movie;
-import com.zb.cinema.movie.repository.MovieCodeRepository;
 import com.zb.cinema.movie.repository.MovieRepository;
-import com.zb.cinema.payment.model.KakaoPayApprovalVO;
-import com.zb.cinema.payment.model.KakaoPayInput;
-import com.zb.cinema.payment.model.KakaoPayReadyVO;
+import com.zb.cinema.payment.entity.Amount;
+import com.zb.cinema.payment.entity.KakaoPayCancel;
+import com.zb.cinema.payment.exception.PayError;
+import com.zb.cinema.payment.exception.PayException;
+import com.zb.cinema.payment.entity.KakaoPayApproval;
+import com.zb.cinema.payment.model.KakaoPayCancelInput;
+import com.zb.cinema.payment.model.KakaoPayReady;
 import com.zb.cinema.ticketing.entity.Ticket;
 import com.zb.cinema.ticketing.exception.TicketError;
 import com.zb.cinema.ticketing.exception.TicketException;
 import com.zb.cinema.ticketing.model.TicketInput;
-import java.util.Optional;
+import com.zb.cinema.payment.repository.AmountRepository;
+import com.zb.cinema.payment.repository.PaymentRepository;
+import com.zb.cinema.ticketing.repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -37,46 +42,35 @@ public class KakaoPayService {
 	private static final String HOST = "https://kapi.kakao.com";
 	@Value("${ADMIN_KEY}")
 	private String admin_key;
-	private KakaoPayReadyVO kakaoPayReadyVO;
-	private KakaoPayApprovalVO kakaoPayApprovalVO;
+	private KakaoPayReady kakaoPayReady;
+	private KakaoPayApproval kakaoPayApproval;
+	private KakaoPayCancel kakaoPayCancel;
 	private final MovieRepository movieRepository;
 	private final AuditoriumRepository auditoriumRepository;
 	private final ScheduleRepository scheduleRepository;
 	private final SeatRepository seatRepository;
+	private final TicketRepository ticketRepository;
+	private final PaymentRepository paymentRepository;
+	private final AmountRepository amountRepository;
 
 
-	public KakaoPayReadyVO kakaoPayReadyUrl(TicketInput parameter, Ticket ticket) {
+	public KakaoPayReady kakaoPayReadyUrl(TicketInput parameter, Ticket ticket) {
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Authorization", "KakaoAK " + admin_key);
 		headers.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8");
 
 		// 결제 상품 이름 찾기
-		Optional<Movie> optionalMovie = movieRepository.findById(ticket.getMovieCode());
-		if(optionalMovie.isEmpty()) {
-			throw new TicketException(TicketError.MOVIE_NOT_FOUND);
-		}
-		Movie movie = optionalMovie.get();
+		Movie movie = movieRepository.findById(ticket.getMovieCode()).orElseThrow(() -> new TicketException(TicketError.MOVIE_NOT_FOUND));
 
 		// 가격 찾기
-		Optional<Schedule> optionalSchedule = scheduleRepository.findById(parameter.getScheduleId());
-		if(optionalSchedule.isEmpty()) {
-			throw new TicketException(TicketError.SCHEDULE_NOT_FOUND);
-		}
-		Schedule schedule = optionalSchedule.get();
+		Schedule schedule = scheduleRepository.findById(parameter.getScheduleId()).orElseThrow(() -> new TicketException(TicketError.SCHEDULE_NOT_FOUND));
 
-		Optional<Auditorium> optionalAuditorium = auditoriumRepository.findById(schedule.getAuditorium().getId());
-		if(optionalAuditorium.isEmpty()) {
-			throw new TicketException(TicketError.AUDITORIUM_NOT_FOUND);
-		}
-		Auditorium auditorium = optionalAuditorium.get();
+		Auditorium auditorium = auditoriumRepository.findById(schedule.getAuditorium().getId()).orElseThrow(() -> new TicketException(TicketError.AUDITORIUM_NOT_FOUND));
 
-		Optional<Seat> optionalSeat = seatRepository.findBySeatNumAndAuditoriumId(
-			parameter.getSeat(), auditorium.getId());
-		if(optionalSeat.isEmpty()) {
-			throw new TicketException(TicketError.SEAT_NOT_FOUND);
-		}
-		Seat seat = optionalSeat.get();
+		Seat seat = seatRepository.findBySeatNumAndAuditoriumId(parameter.getSeat(), auditorium.getId())
+			.orElseThrow(() ->  new TicketException(TicketError.SEAT_NOT_FOUND));
+
 
 
 		// 서버로 요청할 Body
@@ -96,14 +90,14 @@ public class KakaoPayService {
 	}
 
 
-	public KakaoPayReadyVO getKakaoPayUrl(HttpHeaders headers, MultiValueMap<String, String> params) {
+	public KakaoPayReady getKakaoPayUrl(HttpHeaders headers, MultiValueMap<String, String> params) {
 		RestTemplate restTemplate = new RestTemplate();
 		HttpEntity<MultiValueMap<String, String>> body = new HttpEntity<MultiValueMap<String, String>>(params, headers);
 
 		try {
-			kakaoPayReadyVO = restTemplate.postForObject(HOST + "/v1/payment/ready", body, KakaoPayReadyVO.class);
+			kakaoPayReady = restTemplate.postForObject(HOST + "/v1/payment/ready", body, KakaoPayReady.class);
 
-			return kakaoPayReadyVO != null ? kakaoPayReadyVO : null;
+			return kakaoPayReady != null ? kakaoPayReady : null;
 		} catch (RestClientException e) {
 			e.printStackTrace();
 		}
@@ -114,34 +108,23 @@ public class KakaoPayService {
 
 
 
-	public KakaoPayApprovalVO kakaoPayApprovalUrl(String pg_token, TicketInput parameter, KakaoPayReadyVO kakaoPayReadyVO) {
+	public KakaoPayApproval kakaoPayApprovalUrl(String pg_token, TicketInput parameter, KakaoPayReady kakaoPayReady) {
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Authorization", "KakaoAK " + admin_key);
 		headers.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8");
 
-		Optional<Schedule> optionalSchedule = scheduleRepository.findById(parameter.getScheduleId());
-		if(optionalSchedule.isEmpty()) {
-			throw new TicketException(TicketError.SCHEDULE_NOT_FOUND);
-		}
-		Schedule schedule = optionalSchedule.get();
+		Schedule schedule = scheduleRepository.findById(parameter.getScheduleId()).orElseThrow(() -> new TicketException(TicketError.SCHEDULE_NOT_FOUND));
 
-		Optional<Auditorium> optionalAuditorium = auditoriumRepository.findById(schedule.getAuditorium().getId());
-		if(optionalAuditorium.isEmpty()) {
-			throw new TicketException(TicketError.AUDITORIUM_NOT_FOUND);
-		}
-		Auditorium auditorium = optionalAuditorium.get();
+		Auditorium auditorium = auditoriumRepository.findById(schedule.getAuditorium().getId()).orElseThrow(() -> new TicketException(TicketError.AUDITORIUM_NOT_FOUND));
 
-		Optional<Seat> optionalSeat = seatRepository.findBySeatNumAndAuditoriumId(
-			parameter.getSeat(), auditorium.getId());
-		if(optionalSeat.isEmpty()) {
-			throw new TicketException(TicketError.SEAT_NOT_FOUND);
-		}
-		Seat seat = optionalSeat.get();
+		Seat seat = seatRepository.findBySeatNumAndAuditoriumId(
+			parameter.getSeat(), auditorium.getId()).orElseThrow(()-> new TicketException(TicketError.SEAT_NOT_FOUND));
+
 
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add("cid", parameter.getCid());
-		params.add("tid", kakaoPayReadyVO.getTid());
+		params.add("tid", kakaoPayReady.getTid());
 		params.add("partner_order_id", parameter.getPartner_order_id());
 		params.add("partner_user_id", parameter.getPartner_user_id());
 		params.add("pg_token", pg_token);
@@ -150,18 +133,59 @@ public class KakaoPayService {
 		return kakaoPayApprovalInfo(pg_token ,headers, params);
 	}
 
-	public KakaoPayApprovalVO kakaoPayApprovalInfo(String pg_token, HttpHeaders headers, MultiValueMap<String, String> params) {
+	public KakaoPayApproval kakaoPayApprovalInfo(String pg_token, HttpHeaders headers, MultiValueMap<String, String> params) {
 		RestTemplate restTemplate = new RestTemplate();
 		HttpEntity<MultiValueMap<String, String>> body = new HttpEntity<MultiValueMap<String, String>>(params, headers);
 
 		try {
-			kakaoPayApprovalVO = restTemplate.postForObject(HOST + "/v1/payment/approve", body, KakaoPayApprovalVO.class);
+			kakaoPayApproval = restTemplate.postForObject(HOST + "/v1/payment/approve", body, KakaoPayApproval.class);
 
-			return kakaoPayApprovalVO;
+			return kakaoPayApproval;
 
 		} catch (RestClientException e) {
 			e.printStackTrace();
 		}
+		return null;
+	}
+
+
+
+	// 결제 취소
+	public KakaoPayCancel cancelPay(KakaoPayCancelInput parameter) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Authorization", "KakaoAK " + admin_key);
+		headers.add("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8");
+
+		// 예매한 티켓 찾기
+		Ticket ticket = ticketRepository.findByTid(parameter.getTid()).orElseThrow(() -> new TicketException(TicketError.TICKET_NOT_FOUND));
+
+		// 가격 찾기
+		KakaoPayApproval kakaoPayApproval = paymentRepository.findByTid(ticket.getTid()).orElseThrow(() -> new PayException(PayError.PAY_NOT_FOUND));
+		Amount amount = amountRepository.findById(Long.valueOf(kakaoPayApproval.getTid())).orElseThrow(() -> new PayException(
+			PayError.AMOUNT_NOT_FOUND));
+
+		// 서버로 요청할 Body
+		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
+		params.add("cid", parameter.getCid());
+		params.add("tid", parameter.getTid());
+		params.add("cancel_amount", String.valueOf(amount.getTotal()));
+		params.add("cancel_tax_free_amount", String.valueOf(amount.getTax_free()));
+
+		return cancel(headers, params);
+	}
+
+	public KakaoPayCancel cancel(HttpHeaders headers, MultiValueMap<String, String> params) {
+		RestTemplate restTemplate = new RestTemplate();
+		HttpEntity<MultiValueMap<String, String>> body = new HttpEntity<MultiValueMap<String, String>>(params, headers);
+
+		try {
+			kakaoPayCancel = restTemplate.postForObject(HOST + "/v1/payment/cancel", body, KakaoPayCancel.class);
+
+			return kakaoPayCancel != null ? kakaoPayCancel : null;
+		} catch (RestClientException e) {
+			e.printStackTrace();
+		}
+
 		return null;
 	}
 

@@ -10,4 +10,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
 	Optional<Ticket> findByMemberId(String memberId);
 
+	Optional<Ticket> findByTid(String tid);
+
 }
