@@ -22,7 +22,7 @@ public class MemberDto {
 	private LocalDateTime regDt;
 	private LocalDateTime updateDt;
 
-	public static MemberDto fromEntity(Member member) {
+	public static MemberDto from(Member member) {
 		return MemberDto.builder().email(member.getEmail()).password(member.getPassword())
 			.name(member.getName()).phone(member.getPhone()).type(member.getType())
 			.regDt(member.getRegDt()).updateDt(member.getUpdateDt()).build();

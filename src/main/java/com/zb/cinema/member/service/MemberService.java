@@ -5,6 +5,7 @@ import com.zb.cinema.member.exception.MemberError;
 import com.zb.cinema.member.exception.MemberException;
 import com.zb.cinema.member.model.LoginMember;
 import com.zb.cinema.member.model.MemberDto;
+import com.zb.cinema.member.model.RegisterMember;
 import com.zb.cinema.member.repository.MemberRepository;
 import com.zb.cinema.member.type.MemberType;
 import java.time.LocalDateTime;
@@ -28,23 +29,25 @@ public class MemberService implements UserDetailsService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 
-	public MemberDto register(String email, String password, String name, String phone) {
+	public MemberDto register(RegisterMember.Request parameter) {
 
-		Optional<Member> optionalMember = memberRepository.findByEmail(email);
+		Optional<Member> optionalMember = memberRepository.findByEmail(parameter.getEmail());
 
 		if (optionalMember.isPresent()) {
 			throw new MemberException(MemberError.MEMBER_ALREADY_EMAIL);
 		}
 
-		String pw = BCrypt.hashpw(password, BCrypt.gensalt());
+		String pw = BCrypt.hashpw(parameter.getPassword(), BCrypt.gensalt());
 
-		return MemberDto.fromEntity(memberRepository.save(
-			Member.builder().email(email).password(pw).name(name).phone(phone)
-				.regDt(LocalDateTime.now()).type(MemberType.ROLE_READWRITE).build()));
+		return MemberDto.from(memberRepository.save(
+			Member.builder().email(parameter.getEmail()).password(pw).name(parameter.getName())
+				.phone(parameter.getPhone()).regDt(LocalDateTime.now())
+				.type(MemberType.ROLE_READWRITE).build()));
 	}
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
 		Optional<Member> memberOptional = this.memberRepository.findByEmail(username);
 		if (memberOptional.isEmpty()) {
 			throw new UsernameNotFoundException("사용자를 찾을 수 없습니다.");
@@ -63,6 +66,7 @@ public class MemberService implements UserDetailsService {
 	}
 
 	public Member login(LoginMember parameter) {
+
 		Member member = memberRepository.findByEmail(parameter.getEmail())
 			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
 
@@ -70,7 +74,7 @@ public class MemberService implements UserDetailsService {
 			throw new MemberException(MemberError.MEMBER_PASSWORD_NOT_SAME);
 		}
 
-		if(MemberType.ROLE_UN_ACCESSIBLE.equals(member.getType())) {
+		if (MemberType.ROLE_UN_ACCESSIBLE.equals(member.getType())) {
 			throw new MemberException(MemberError.MEMBER_ROLE_UN_ACCESSIBLE);
 		}
 
