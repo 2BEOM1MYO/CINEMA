@@ -47,39 +47,28 @@ public class AdminService {
     private final MemberRepository memberRepository;
     private final AuditoriumRepository auditoriumRepository;
 
-    //토큰으로 관리자 권한 확인
-    public boolean isAdmin(String token) {
-        String email = "";
-        email = tokenProvider.getUserPk(token);
-        Member adminMember = memberRepository.findByEmail(email).get();
-
-        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
-            return false;
-        }
-        return true;
-    }
-
     //영화 상태 설정 (상영중 / 상영예정 / 상영종료)
-    public ResponseMessage setMovieScreeningStatus(Long movieCode, MovieStatus status,
+    public void setMovieScreeningStatus(Long movieCode, MovieStatus status,
         String token) {
 
         if (!isAdmin(token)) {
-            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+            throw new RuntimeException(
+                ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
+        Movie movie = movieRepository.findById(movieCode)
+            .orElseThrow();
 
-        Optional<Movie> optionalMovie = movieRepository.findById(movieCode);
-        if (!optionalMovie.isPresent()) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
-        }
         //이미 같은 상태일 때 예외처리
-        Movie movie = optionalMovie.get();
         if (movie.getStatus() == status) {
             if (status == MovieStatus.STATUS_OVER) {
-                return ResponseMessage.fail(ErrorCode.MOVIE_ALREADY_NOT_SHOWING.getDescription());
+                throw new RuntimeException(
+                    ErrorCode.MOVIE_ALREADY_NOT_SHOWING.getDescription());
             } else if (status == MovieStatus.STATUS_SHOWING) {
-                return ResponseMessage.fail(ErrorCode.MOVIE_ALREADY_SHOWING.getDescription());
+                throw new RuntimeException(
+                    ErrorCode.MOVIE_ALREADY_SHOWING.getDescription());
             } else if (status == MovieStatus.STATUS_WILL) {
-                return ResponseMessage.fail(ErrorCode.MOVIE_ALREADY_WILL_SHOWING.getDescription());
+                throw new RuntimeException(
+                    ErrorCode.MOVIE_ALREADY_WILL_SHOWING.getDescription());
             }
         }
         //상영일정이 존재할 경우 상영 종료설정 불가
@@ -87,7 +76,7 @@ public class AdminService {
             List<Schedule> scheduleList =
                 scheduleRepository.findAllByMovieAndEndDtAfter(movie, LocalDateTime.now());
             if (scheduleList.size() > 0) {
-                return ResponseMessage.fail("상영 일정이 존재하여 상영종료가 불가능합니다.");
+                throw new RuntimeException("상영 일정이 존재하여 상영종료가 불가능합니다.");
             }
             //상영 종료 설정 시 관련 데이터 삭제
             //1. 해당 상영일정의 좌석들 삭제
@@ -105,27 +94,26 @@ public class AdminService {
 
         movie.setStatus(status);
         movieRepository.save(movie);
-
-        return ResponseMessage.success(movie);
     }
 
     //상영 상태에 따른 조회
-    public ResponseMessage getMovieListByStatus(MovieStatus status) {
+    public List<Movie> getMovieListByStatus(MovieStatus status) {
         List<Movie> movieList = movieRepository.findAllByStatus(status);
         if (movieList.size() < 1) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
+            throw new RuntimeException(
+                ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
-        return ResponseMessage.success(movieList);
+        return movieList;
     }
 
     //극장 추가
-    public ResponseMessage registerTheater(InputTheater inputTheater) {
+    public Theater registerTheater(InputTheater inputTheater) {
         String area = inputTheater.getArea();
         String city = inputTheater.getCity();
         String name = inputTheater.getName();
 
         if (theaterRepository.countByAreaAndCityAndName(area, city, name) > 0) {
-            return ResponseMessage.fail("이미 존재하는 극장입니다.");
+            throw new RuntimeException("이미 존재하는 극장입니다.");
         }
 
         Theater theater = Theater.builder()
@@ -135,25 +123,28 @@ public class AdminService {
             .build();
 
         theaterRepository.save(theater);
-        return ResponseMessage.success(theater);
+        return theater;
     }
 
     //상영관 추가
-    public ResponseMessage registerAuditorium(InputAuditorium inputAuditorium, String token) {
+    public Auditorium registerAuditorium(InputAuditorium inputAuditorium, String token) {
         //권한 확인
         if (!isAdmin(token)) {
-            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+            throw new RuntimeException(
+                ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
         Optional<Theater> optionalTheater = theaterRepository.findById(
             inputAuditorium.getTheaterId());
         if (!optionalTheater.isPresent()) {
-            return ResponseMessage.fail(ErrorCode.THEATER_NOT_FOUND.getDescription());
+            throw new RuntimeException(
+                ErrorCode.THEATER_NOT_FOUND.getDescription());
         }
         Theater theater = optionalTheater.get();
 
         if (auditoriumRepository.findByTheaterAndAndName(theater,
             inputAuditorium.getName()).isPresent()) {
-            return ResponseMessage.fail(ErrorCode.AUDITORIUM_ALREADY_EXIST.getDescription());
+            throw new RuntimeException(
+                ErrorCode.AUDITORIUM_ALREADY_EXIST.getDescription());
         }
 
         Auditorium auditorium = Auditorium.builder()
@@ -162,33 +153,28 @@ public class AdminService {
             .capacity(inputAuditorium.getCapacity()).build();
         auditoriumRepository.save(auditorium);
 
-        return ResponseMessage.success(auditorium);
+        return auditorium;
     }
 
     //상영일정 추가
-    public ResponseMessage registerSchedule(InputSchedule inputSchedule, String token) {
+    public Schedule registerSchedule(InputSchedule inputSchedule, String token) {
         //권한 확인
         if (!isAdmin(token)) {
-            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+            throw new RuntimeException(
+                ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
 
         //상영관 확인
-        Optional<Auditorium> optionalAuditorium = auditoriumRepository.findById(
-            inputSchedule.getAuditoriumId());
-        if (!optionalAuditorium.isPresent()) {
-            return ResponseMessage.fail(ErrorCode.AUDITORIUM_NOT_FOUND.getDescription());
-        }
-        Auditorium auditorium = optionalAuditorium.get();
+        Auditorium auditorium = auditoriumRepository.findById(
+            inputSchedule.getAuditoriumId()).orElseThrow();
 
         //영화 확인
-        Optional<Movie> optionalMovie = movieRepository.findById(inputSchedule.getMovieCode());
-        if (!optionalMovie.isPresent()) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
-        }
-        Movie movie = optionalMovie.get();
+        Movie movie = movieRepository.findById(inputSchedule.getMovieCode())
+            .orElseThrow();
 
         if (movie.getStatus() != MovieStatus.STATUS_SHOWING) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_SHOWING.getDescription());
+            throw new RuntimeException(
+                ErrorCode.MOVIE_NOT_SHOWING.getDescription());
         }
 
         //시간 값 포맷
@@ -200,7 +186,8 @@ public class AdminService {
             startDt.minusMinutes(30), endDt.plusMinutes(30), auditorium,
             startDt.minusMinutes(30), endDt.plusMinutes(30), auditorium);
         if (scheduleList.size() > 0) {
-            return ResponseMessage.fail(ErrorCode.SCHEDULE_ALREADY_EXIST.getDescription());
+            throw new RuntimeException(
+                ErrorCode.SCHEDULE_ALREADY_EXIST.getDescription());
         }
 
         Schedule schedule = Schedule.builder()
@@ -228,7 +215,7 @@ public class AdminService {
 
         seatRepository.saveAll(seatList);
 
-        return ResponseMessage.success(schedule);
+        return schedule;
     }
 
     //좌석 생성
@@ -259,36 +246,30 @@ public class AdminService {
         return seatList;
     }
 
-    public ResponseMessage setSeatPrice(String token, Long id, Long price) {
+    public SeatModel setSeatPrice(String token, Long id, Long price) {
         if (!isAdmin(token)) {
-            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+            throw new RuntimeException(
+                ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
 
-        Optional<Seat> optionalSeat = seatRepository.findById(id);
-        if (!optionalSeat.isPresent()) {
-            return ResponseMessage.fail("좌석정보가 없습니다.");
-        }
-        Seat seat = optionalSeat.get();
+        Seat seat = seatRepository.findById(id).orElseThrow();
+
         seat.setPrice(price);
         seatRepository.save(seat);
-        return ResponseMessage.success(
-            SeatModel.builder()
+        return SeatModel.builder()
                 .id(seat.getId())
                 .seatNum(seat.getSeatNum())
                 .price(seat.getPrice())
-                .isUsing(seat.isUsing()).build());
+                .isUsing(seat.isUsing()).build();
     }
 
     //    영화로 상영일정 조회
-    public ResponseMessage getScheduleByMovie(Long movieCode) {
-        Optional<Movie> optionalMovie = movieRepository.findById(movieCode);
-        if (!optionalMovie.isPresent()) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
-        }
+    public List<AuditoriumSchedule> getScheduleByMovie(Long movieCode) {
+        Movie movie = movieRepository.findById(movieCode).orElseThrow();
 
-        List<Schedule> scheduleList = scheduleRepository.findAllByMovie(optionalMovie.get());
+        List<Schedule> scheduleList = scheduleRepository.findAllByMovie(movie);
         if (scheduleList.size() < 1) {
-            return ResponseMessage.fail("해당 영화는 상영 일정이 없습니다.");
+            throw new RuntimeException("해당 영화는 상영 일정이 없습니다.");
         }
 
         List<AuditoriumSchedule> auditoriumSchedules = new ArrayList<>();
@@ -306,15 +287,16 @@ public class AdminService {
                 .build());
         }
 
-        return ResponseMessage.success(auditoriumSchedules);
+        return auditoriumSchedules;
     }
 
     // 상영일정의 좌석 조회
-    public ResponseMessage getAuditoriumSeats(Long scheduleId) {
+    public List<SeatModel> getAuditoriumSeats(Long scheduleId) {
 
         Optional<Schedule> optionalAuditorium = scheduleRepository.findById(scheduleId);
         if (!optionalAuditorium.isPresent()) {
-            return ResponseMessage.fail(ErrorCode.SCHEDULE_NOT_FOUND.getDescription());
+            throw new RuntimeException(
+                ErrorCode.SCHEDULE_NOT_FOUND.getDescription());
         }
         Schedule schedule = optionalAuditorium.get();
         List<Seat> seats = seatRepository.findAllBySchedule(schedule);
@@ -328,42 +310,38 @@ public class AdminService {
                 .build());
         }
 
-        return ResponseMessage.success(seatModels);
+        return seatModels;
     }
 
     //회원 권한 지정
-    public ResponseMessage setMemberType(String token, String memberEmail, MemberType memberType) {
+    public void setMemberType(String token, String memberEmail, MemberType memberType) {
 
         if (!isAdmin(token)) {
-            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+            throw new RuntimeException(
+                ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
 
-        Optional<Member> optionalMember = memberRepository.findByEmail(memberEmail);
-        if (!optionalMember.isPresent()) {
-            return ResponseMessage.fail(MemberError.MEMBER_NOT_FOUND.getDescription());
-        }
-        Member member = optionalMember.get();
+        Member member = memberRepository.findByEmail(memberEmail).orElseThrow();
         if (member.getType() == memberType) {
             if (memberType == MemberType.ROLE_ADMIN) {
-                return ResponseMessage.fail("이미 관리자회원 입니다.");
+                throw new RuntimeException("이미 관리자회원 입니다.");
             } else if (memberType == MemberType.ROLE_READWRITE) {
-                return ResponseMessage.fail("이미 일반 회원 입니다.");
+                throw new RuntimeException("이미 일반 회원 입니다.");
             } else if (memberType == MemberType.ROLE_UN_ACCESSIBLE) {
-                return ResponseMessage.fail("이미 정지된 회원 입니다.");
+                throw new RuntimeException("이미 정지된 회원 입니다.");
             }
         }
 
         member.setType(memberType);
         memberRepository.save(member);
-
-        return ResponseMessage.success();
     }
 
     //모든 회원 조회
-    public ResponseMessage getAllMember(String token) {
+    public List<AdminMemberDto> getAllMember(String token) {
 
         if (!isAdmin(token)) {
-            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+            throw new RuntimeException(
+                ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
 
         List<Member> memberList = memberRepository.findAll();
@@ -372,15 +350,16 @@ public class AdminService {
             adminMemberDtoList.add(AdminMemberDto.from(member));
         }
 
-        return ResponseMessage.success(adminMemberDtoList);
+        return adminMemberDtoList;
     }
 
     //관리자 추가
-    public ResponseMessage registerAdmin(String token, String email, String password, String name,
+    public MemberDto registerAdmin(String token, String email, String password, String name,
         String phone) {
 
         if (!isAdmin(token)) {
-            return ResponseMessage.fail(ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
+            throw new RuntimeException(
+                ErrorCode.INVALID_ACCESS_MEMBER.getDescription());
         }
 
         Optional<Member> optionalMember = memberRepository.findByEmail(email);
@@ -391,8 +370,20 @@ public class AdminService {
 
         String pw = BCrypt.hashpw(password, BCrypt.gensalt());
 
-        return ResponseMessage.success(MemberDto.fromEntity(memberRepository.save(
+        return MemberDto.fromEntity(memberRepository.save(
             Member.builder().email(email).password(pw).name(name).phone(phone)
-                .regDt(LocalDateTime.now()).type(MemberType.ROLE_ADMIN).build())));
+                .regDt(LocalDateTime.now()).type(MemberType.ROLE_ADMIN).build()));
+    }
+
+    //토큰으로 관리자 권한 확인
+    private boolean isAdmin(String token) {
+        String email = "";
+        email = tokenProvider.getUserPk(token);
+        Member adminMember = memberRepository.findByEmail(email).get();
+
+        if (adminMember.getType() == MemberType.ROLE_READWRITE) {
+            return false;
+        }
+        return true;
     }
 }

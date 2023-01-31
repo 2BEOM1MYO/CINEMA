@@ -37,7 +37,7 @@ public class MovieService {
     private final MovieRepository movieRePository;
     private final KobisManager kobisManager;
 
-    public ResponseMessage saveMovieCode(String date) {
+    public List<MovieCode> saveMovieCode(String date) {
         BoxOffice boxOffice = kobisManager.fetchBoxOfficeResult(date);
         List<MovieCode> movieCodeList = new ArrayList<>();
         for (BoxOfficeResultList item : boxOffice.getBoxOfficeResult()
@@ -52,10 +52,10 @@ public class MovieService {
 
         movieCodeRepository.saveAll(movieCodeList);
 
-        return ResponseMessage.success(movieCodeList);
+        return movieCodeList;
     }
 
-    public ResponseMessage saveManyMovieCodes(InputDates dates) {
+    public Set<MovieCode> saveManyMovieCodes(InputDates dates) {
         Set<MovieCode> movieCodeList = new HashSet<>();
         List<BoxOfficeResultList> boxOfficeList = new ArrayList<>();
         try {
@@ -76,11 +76,11 @@ public class MovieService {
 
         movieCodeRepository.saveAll(movieCodeList);
 
-        return ResponseMessage.success(movieCodeList);
+        return movieCodeList;
     }
 
     //영화 상세정보 저장
-    public ResponseMessage saveMovieInfoByMovieCode(Long movieCode)
+    public Movie saveMovieInfoByMovieCode(Long movieCode)
         throws ParseException {
 
         MovieInfoOutput movieInfoOutput = kobisManager.fetchMovieInfoResult(
@@ -127,98 +127,98 @@ public class MovieService {
             .build();
 
         movieRePository.save(movie);
-        return ResponseMessage.success(movie);
+        return movie;
     }
 
     //제목으로 코드조회
-    public ResponseMessage getMovieCodeByTitle(String movieNm) {
+    public List<MovieCode> getMovieCodeByTitle(String movieNm) {
         List<MovieCode> movieCodeList = movieCodeRepository.findByTitleContaining(
             movieNm);
 
         if (movieCodeList.size() < 1) {
-            return ResponseMessage.fail(
+            throw new RuntimeException(
                 ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
-        return ResponseMessage.success(movieCodeList);
+        return movieCodeList;
     }
 
     //제목으로 영화 상세정보 조회
-    public ResponseMessage movieInfoListByTitle(String movieNm) {
+    public List<Movie> movieInfoListByTitle(String movieNm) {
         List<Movie> movieList = movieRePository.findAllByTitleContaining(
             movieNm);
 
         if (movieList.size() < 1) {
-            return ResponseMessage.fail(
+            throw new RuntimeException(
                 ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        return ResponseMessage.success(movieList);
+        return movieList;
     }
 
     //영화 상세정보 삭제
-    public ResponseMessage deleteMovieInfo(String movieNm) {
+    public List<Movie> deleteMovieInfo(String movieNm) {
         List<Movie> movieList = movieRePository.findAllByTitleContaining(
             movieNm);
         if (movieList.size() > 1) {
-            return ResponseMessage.fail(
-                ErrorCode.MANY_MOVIE_FOUND.getDescription(), movieList);
+            throw new RuntimeException(
+                ErrorCode.MANY_MOVIE_FOUND.getDescription());
         } else if (movieList.size() < 1) {
-            return ResponseMessage.fail(
+            throw new RuntimeException(
                 ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
         movieRePository.delete(movieList.get(0));
-        return ResponseMessage.success(movieList);
+        return movieList;
     }
 
     //장르로 영화 조회
-    public ResponseMessage movieInfoListByGenre(String genre) {
+    public List<Movie> movieInfoListByGenre(String genre) {
         List<Movie> movieList;
 
         try {
             movieList = movieRePository.findAllByGenreContaining(genre);
         } catch (Exception e) {
-            return ResponseMessage.fail("");
+            throw new RuntimeException();
         }
         if (movieList.size() < 1) {
-            return ResponseMessage.fail(
+            throw new RuntimeException(
                 ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        return ResponseMessage.success(movieList);
+        return movieList;
     }
 
     //감독으로 영화 조회
-    public ResponseMessage movieInfoListByDirector(String director) {
+    public List<Movie> movieInfoListByDirector(String director) {
         List<Movie> movieList;
 
         try {
             movieList = movieRePository.findAllByDirectorsContaining(director);
         } catch (Exception e) {
-            return ResponseMessage.fail("");
+            throw new RuntimeException();
         }
         if (movieList.size() < 1) {
-            return ResponseMessage.fail(
+            throw new RuntimeException(
                 ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        return ResponseMessage.success(movieList);
+        return movieList;
     }
 
     //배우로 영화 조회
-    public ResponseMessage movieInfoListByActor(String actor) {
+    public List<Movie> movieInfoListByActor(String actor) {
         List<Movie> movieList;
 
         try {
             movieList = movieRePository.findAllByActorsContaining(actor);
         } catch (Exception e) {
-            return ResponseMessage.fail("");
+            throw new RuntimeException();
         }
         if (movieList.size() < 1) {
-            return ResponseMessage.fail(
+            throw new RuntimeException(
                 ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        return ResponseMessage.success(movieList);
+        return movieList;
     }
 }

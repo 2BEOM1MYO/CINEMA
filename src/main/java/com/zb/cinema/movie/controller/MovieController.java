@@ -1,9 +1,13 @@
 package com.zb.cinema.movie.controller;
 
+import com.zb.cinema.movie.entity.Movie;
+import com.zb.cinema.movie.entity.MovieCode;
 import com.zb.cinema.movie.model.request.InputDates;
 import com.zb.cinema.movie.model.response.ResponseMessage;
 import com.zb.cinema.movie.service.MovieService;
 import java.text.ParseException;
+import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,58 +24,56 @@ public class MovieController {
     private final MovieService movieService;
 
     @PostMapping("/movie/register/{date}") //yyyyMMdd
-    public ResponseEntity<ResponseMessage> saveMovieCode(@PathVariable String date) {
-        ResponseMessage result = movieService.saveMovieCode(date);
-        return ResponseEntity.ok(result);
+    public List<MovieCode> saveMovieCode(@PathVariable String date) {
+
+        return movieService.saveMovieCode(date);
     }
 
     @PostMapping("/movie/register/dates") //yyyyMMdd
-    public ResponseEntity<ResponseMessage> saveMovieCodes(@RequestBody InputDates dates) {
-        ResponseMessage result = movieService.saveManyMovieCodes(dates);
-        return ResponseEntity.ok(result);
+    public Set<MovieCode> saveMovieCodes(@RequestBody InputDates dates) {
+        return movieService.saveManyMovieCodes(dates);
     }
 
     @PostMapping("/movie/register/movieInfo/{movieCode}") //yyyyMMdd
-    public ResponseEntity<ResponseMessage> saveMovieInfo(@PathVariable Long movieCode)
+    public Movie saveMovieInfo(@PathVariable Long movieCode)
         throws ParseException {
-        ResponseMessage result = movieService.saveMovieInfoByMovieCode(movieCode);
-        return ResponseEntity.ok(result);
+
+        return movieService.saveMovieInfoByMovieCode(movieCode);
     }
 
     @GetMapping("/movie/code/{movieNm}")
-    public ResponseEntity<ResponseMessage> getMovieCodeByTitle(@PathVariable String movieNm) {
+    public List<MovieCode> getMovieCodeByTitle(@PathVariable String movieNm) {
 
-        ResponseMessage result = movieService.getMovieCodeByTitle(movieNm);
-        return ResponseEntity.ok(result);
+        return movieService.getMovieCodeByTitle(movieNm);
     }
 
     @GetMapping("/movie/info/title/{movieNm}")
-    public ResponseEntity<ResponseMessage> movieInfoListByTitle(@PathVariable String movieNm) {
-        ResponseMessage result = movieService.movieInfoListByTitle(movieNm);
-        return ResponseEntity.ok(result);
+    public List<Movie> movieInfoListByTitle(@PathVariable String movieNm) {
+
+        return movieService.movieInfoListByTitle(movieNm);
     }
 
     @DeleteMapping("/movie/delete/{movieNm}")
-    public ResponseEntity<ResponseMessage> deleteMovieInfo(@PathVariable String movieNm) {
-        ResponseMessage result = movieService.deleteMovieInfo(movieNm);
-        return ResponseEntity.ok(result);
+    public void deleteMovieInfo(@PathVariable String movieNm) {
+
+        movieService.deleteMovieInfo(movieNm);
     }
 
     @GetMapping("/movie/info/genre/{genre}")
-    public ResponseEntity<ResponseMessage> movieInfoListByGenre(@PathVariable String genre) {
-        ResponseMessage result = movieService.movieInfoListByGenre(genre);
-        return ResponseEntity.ok(result);
+    public List<Movie> movieInfoListByGenre(@PathVariable String genre) {
+
+        return movieService.movieInfoListByGenre(genre);
     }
 
     @GetMapping("/movie/info/director/{director}")
-    public ResponseEntity<ResponseMessage> movieInfoListByDirector(@PathVariable String director) {
-        ResponseMessage result = movieService.movieInfoListByDirector(director);
-        return ResponseEntity.ok(result);
+    public List<Movie> movieInfoListByDirector(@PathVariable String director) {
+
+        return movieService.movieInfoListByDirector(director);
     }
 
     @GetMapping("/movie/info/actor/{actor}")
-    public ResponseEntity<ResponseMessage> movieInfoListByActor(@PathVariable String actor) {
-        ResponseMessage result = movieService.movieInfoListByActor(actor);
-        return ResponseEntity.ok(result);
+    public List<Movie> movieInfoListByActor(@PathVariable String actor) {
+
+        return movieService.movieInfoListByActor(actor);
     }
 }

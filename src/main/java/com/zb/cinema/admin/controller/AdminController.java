@@ -1,13 +1,22 @@
 package com.zb.cinema.admin.controller;
 
+import com.zb.cinema.admin.entity.Auditorium;
+import com.zb.cinema.admin.entity.Schedule;
+import com.zb.cinema.admin.entity.Theater;
 import com.zb.cinema.admin.model.request.InputAuditorium;
 import com.zb.cinema.admin.model.request.InputSchedule;
 import com.zb.cinema.admin.model.request.InputTheater;
+import com.zb.cinema.admin.model.response.AdminMemberDto;
+import com.zb.cinema.admin.model.response.AuditoriumSchedule;
+import com.zb.cinema.admin.model.response.SeatModel;
 import com.zb.cinema.admin.service.AdminService;
+import com.zb.cinema.member.model.MemberDto;
 import com.zb.cinema.member.model.RegisterMember;
 import com.zb.cinema.member.type.MemberType;
+import com.zb.cinema.movie.entity.Movie;
 import com.zb.cinema.movie.model.response.ResponseMessage;
 import com.zb.cinema.movie.type.MovieStatus;
+import java.util.List;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,142 +38,144 @@ public class AdminController {
 
     // 영화 상영중으로 설정
     @PatchMapping("/admin/movie/{movieCode}/showing")
-    public ResponseEntity<ResponseMessage> movieSetShowing(@PathVariable Long movieCode,
+    public void movieSetShowing(@PathVariable Long movieCode,
         @RequestHeader("token") String token) {
-        ResponseMessage result = adminService.setMovieScreeningStatus(movieCode,
+        adminService.setMovieScreeningStatus(movieCode,
             MovieStatus.STATUS_SHOWING, token);
-        return ResponseEntity.ok(result);
     }
 
     // 영화 상영예정으로 설정
     @PatchMapping("/admin/movie/{movieCode}/showing/will")
-    public ResponseEntity<ResponseMessage> movieSetShowingWill(@PathVariable Long movieCode,
+    public void movieSetShowingWill(@PathVariable Long movieCode,
         @RequestHeader("token") String token) {
-        ResponseMessage result = adminService.setMovieScreeningStatus(movieCode,
+        adminService.setMovieScreeningStatus(movieCode,
             MovieStatus.STATUS_WILL, token);
-        return ResponseEntity.ok(result);
     }
 
     // 영화 상영종료 설정
     @PatchMapping("/admin/movie/{movieCode}/showing/over")
-    public ResponseEntity<ResponseMessage> movieSetShowingEnd(@PathVariable Long movieCode,
+    public void movieSetShowingEnd(@PathVariable Long movieCode,
         @RequestHeader("token") String token) {
-        ResponseMessage result = adminService.setMovieScreeningStatus(movieCode,
+        adminService.setMovieScreeningStatus(movieCode,
             MovieStatus.STATUS_OVER, token);
-        return ResponseEntity.ok(result);
     }
 
     // 상영중인 영화 조회
     @GetMapping("/movie/showing")
-    public ResponseEntity<ResponseMessage> getMovieListShowing() {
-        ResponseMessage result = adminService.getMovieListByStatus(MovieStatus.STATUS_SHOWING);
-        return ResponseEntity.ok(result);
+    public List<Movie> getMovieListShowing() {
+
+        return adminService.getMovieListByStatus(MovieStatus.STATUS_SHOWING);
     }
 
     // 상영예정 영화 조회
     @GetMapping("/movie/showing/will")
-    public ResponseEntity<ResponseMessage> getMovieListShowingWill() {
-        ResponseMessage result = adminService.getMovieListByStatus(MovieStatus.STATUS_WILL);
-        return ResponseEntity.ok(result);
+    public List<Movie> getMovieListShowingWill() {
+
+        return adminService.getMovieListByStatus(MovieStatus.STATUS_WILL);
     }
 
     // 상영종료 영화 조회
     @GetMapping("/movie/showing/over")
-    public ResponseEntity<ResponseMessage> getMovieListShowingOver() {
-        ResponseMessage result = adminService.getMovieListByStatus(MovieStatus.STATUS_OVER);
-        return ResponseEntity.ok(result);
+    public List<Movie> getMovieListShowingOver() {
+
+        return adminService.getMovieListByStatus(MovieStatus.STATUS_OVER);
     }
 
     // 극장 등록
     @PostMapping("/admin/register/theater")
-    public ResponseEntity<ResponseMessage> registerTheater(@RequestBody InputTheater theater) {
-        ResponseMessage result = adminService.registerTheater(theater);
-        return ResponseEntity.ok(result);
+    public Theater registerTheater(@RequestBody InputTheater theater) {
+
+        return adminService.registerTheater(theater);
     }
 
     // 상영관 등록
     @PostMapping("/admin/register/auditorium")
-    public ResponseEntity<ResponseMessage> registerAuditorium(
+    public Auditorium registerAuditorium(
         @RequestBody InputAuditorium inputAuditorium,
         @RequestHeader("token") String token) {
-        ResponseMessage result = adminService.registerAuditorium(inputAuditorium, token);
-        return ResponseEntity.ok(result);
+
+        return adminService.registerAuditorium(
+            inputAuditorium, token);
     }
 
     // 일정 등록
     @PostMapping("/admin/register/schedule")
-    public ResponseEntity<ResponseMessage> registerSchedule(
+    public Schedule registerSchedule(
         @RequestBody InputSchedule inputSchedule,
         @RequestHeader("token") String token) {
-        ResponseMessage result = adminService.registerSchedule(inputSchedule, token);
-        return ResponseEntity.ok(result);
+        return adminService.registerSchedule(inputSchedule,
+            token);
     }
 
     //좌석 가격 설정
     @PostMapping("/admin/seat/{id}/price")
-    public ResponseEntity<ResponseMessage> setSeatPrice(
-        @RequestHeader("token") String token, @PathVariable Long id, @RequestParam Long price) {
-        ResponseMessage result = adminService.setSeatPrice(token, id, price);
-        return ResponseEntity.ok(result);
+    public SeatModel setSeatPrice(
+        @RequestHeader("token") String token, @PathVariable Long id,
+        @RequestParam Long price) {
+
+        return adminService.setSeatPrice(token, id, price);
     }
 
     // 상영일정 조회
     @GetMapping("/{movieCode}/schedule")
-    public ResponseEntity<ResponseMessage> auditoriumByMovie(@PathVariable Long movieCode) {
-        ResponseMessage result = adminService.getScheduleByMovie(movieCode);
-        return ResponseEntity.ok(result);
+    public List<AuditoriumSchedule> auditoriumByMovie(
+        @PathVariable Long movieCode) {
+
+        return adminService.getScheduleByMovie(movieCode);
     }
 
     // 상영일정 좌석 조회
     @GetMapping("/seat/{scheduleId}")
-    public ResponseEntity<ResponseMessage> auditoriumSeats(@PathVariable Long scheduleId) {
-        ResponseMessage result = adminService.getAuditoriumSeats(scheduleId);
-        return ResponseEntity.ok(result);
+    public List<SeatModel> auditoriumSeats(
+        @PathVariable Long scheduleId) {
+
+        return adminService.getAuditoriumSeats(scheduleId);
     }
 
     // 회원 관리자로 지정
     @PutMapping("/admin/type/admin")
-    public ResponseEntity<ResponseMessage> setAdmin(@RequestParam String memberEmail,
+    public void setAdmin(
+        @RequestParam String memberEmail,
         @RequestHeader("token") String token) {
 
-        ResponseMessage result = adminService.setMemberType(token, memberEmail,
-            MemberType.ROLE_ADMIN);
-        return ResponseEntity.ok(result);
+        adminService.setMemberType(token, memberEmail, MemberType.ROLE_ADMIN);
     }
 
     // 회원 일반회원으로 지정
     @PutMapping("/admin/type/member")
-    public ResponseEntity<ResponseMessage> setMember(@RequestParam String memberEmail,
+    public void setMember(
+        @RequestParam String memberEmail,
         @RequestHeader("token") String token) {
-        ResponseMessage result = adminService.setMemberType(token, memberEmail,
+        adminService.setMemberType(token, memberEmail,
             MemberType.ROLE_READWRITE);
-        return ResponseEntity.ok(result);
     }
 
     // 회원 정지회원으로 지정
     @PutMapping("/admin/type/ban")
-    public ResponseEntity<ResponseMessage> setBan(@RequestParam String memberEmail,
+    public void setBan(
+        @RequestParam String memberEmail,
         @RequestHeader("token") String token) {
-        ResponseMessage result = adminService.setMemberType(token, memberEmail,
+        adminService.setMemberType(token, memberEmail,
             MemberType.ROLE_UN_ACCESSIBLE);
-        return ResponseEntity.ok(result);
     }
 
     // 회원 전체 목록 조회
     @GetMapping("/admin/member")
-    public ResponseEntity<ResponseMessage> allMember(@RequestHeader("token") String token) {
-        ResponseMessage result = adminService.getAllMember(token);
-        return ResponseEntity.ok(result);
+    public List<AdminMemberDto> allMember(
+        @RequestHeader("token") String token) {
+
+        return adminService.getAllMember(token);
     }
 
     // 관리자가 직접 관리자 추가
     @PostMapping("/admin/register")
-    public ResponseEntity<ResponseMessage> signUpAdmin(
+    public MemberDto signUpAdmin(
         @RequestBody @Valid RegisterMember.Request request,
         @RequestHeader("token") String token) {
-        ResponseMessage result = adminService.registerAdmin(token, request.getEmail(),
+
+        return adminService.registerAdmin(token,
+            request.getEmail(),
             request.getPassword(), request.getName(),
             request.getPhone());
-        return ResponseEntity.ok(result);
     }
 }
