@@ -25,27 +25,23 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class MovieService {
+
     private final MovieCodeRepository movieCodeRepository;
     private final MovieRepository movieRePository;
     private final KobisManager kobisManager;
 
-    private String arrangeStr(String str) {
-        if (str == "") {
-            return "";
-        }
-        return str.substring(0, str.length() - 2);
-    }
-
-    public ResponseMessage saveMovieCode(String date) {
+    public List<MovieCode> saveMovieCode(String date) {
         BoxOffice boxOffice = kobisManager.fetchBoxOfficeResult(date);
         List<MovieCode> movieCodeList = new ArrayList<>();
-        for (BoxOfficeResultList item : boxOffice.getBoxOfficeResult().getDailyBoxOfficeList()) {
+        for (BoxOfficeResultList item : boxOffice.getBoxOfficeResult()
+            .getDailyBoxOfficeList()) {
             movieCodeList.add(
                 MovieCode.builder()
                     .code(Long.parseLong(item.getMovieCd()))
@@ -56,10 +52,10 @@ public class MovieService {
 
         movieCodeRepository.saveAll(movieCodeList);
 
-        return ResponseMessage.success(movieCodeList);
+        return movieCodeList;
     }
 
-    public ResponseMessage saveManyMovieCodes(InputDates dates) {
+    public Set<MovieCode> saveManyMovieCodes(InputDates dates) {
         Set<MovieCode> movieCodeList = new HashSet<>();
         List<BoxOfficeResultList> boxOfficeList = new ArrayList<>();
         try {
@@ -80,51 +76,38 @@ public class MovieService {
 
         movieCodeRepository.saveAll(movieCodeList);
 
-        return ResponseMessage.success(movieCodeList);
+        return movieCodeList;
     }
-    //영화 상세정보 저장
-    public ResponseMessage saveMovieInfoByMovieCode(Long movieCode) throws ParseException {
 
-        MovieInfoOutput movieInfoOutput = kobisManager.fetchMovieInfoResult(movieCode);
-        MovieInfo movieInfo = movieInfoOutput.getMovieInfoResult().getMovieInfo();
+    //영화 상세정보 저장
+    public Movie saveMovieInfoByMovieCode(Long movieCode)
+        throws ParseException {
+
+        MovieInfoOutput movieInfoOutput = kobisManager.fetchMovieInfoResult(
+            movieCode);
+        MovieInfo movieInfo = movieInfoOutput.getMovieInfoResult()
+            .getMovieInfo();
         // 감독, 배우, 장르, 국가는 list를 합쳐서 하나의 문자열로 저장
         List<Directors> directors = movieInfo.getDirectors();
-        String director = "";
-        for (Directors item : directors) {
-            director += item.getPeopleNm();
-            director += ", ";
-        }
+        String director = directors.stream().map(Directors::getPeopleNm)
+            .collect(Collectors.joining(", "));
 
         List<Actors> actors = movieInfo.getActors();
-        String actor = "";
-        int cnt = 0;
-        for (Actors item : actors) {
-            cnt++;
-            actor += item.getPeopleNm();
-            actor += ", ";
-            if (cnt > 10) {
-                break;
-            }
-        }
+        String actor = actors.stream().map(Actors::getPeopleNm).limit(10)
+            .collect(Collectors.joining(", "));
 
         List<Genres> genres = movieInfo.getGenres();
-        String genre = "";
-        for (Genres item : genres) {
-            genre += item.getGenreNm();
-            genre += ", ";
-        }
+        String genre = genres.stream().map(Genres::getGenreNm)
+            .collect(Collectors.joining(", "));
 
         List<Nations> nations = movieInfo.getNations();
-        String nation = "";
-        for (Nations item : nations) {
-            nation += item.getNationNm();
-            nation += ", ";
-        }
+        String nation = nations.stream().map(Nations::getNationNm)
+            .collect(Collectors.joining(", "));
         //날짜 포맷
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
         LocalDateTime openDt = null;
         if (movieInfo.getOpenDt() != "") {
-            openDt = format.parse((String) movieInfo.getOpenDt())
+            openDt = format.parse(movieInfo.getOpenDt())
                 .toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
@@ -134,92 +117,108 @@ public class MovieService {
             .code(Long.parseLong(
                 movieInfo.getMovieCd()))
             .title(movieInfo.getMovieNm())
-            .actors(arrangeStr(actor))
-            .directors(arrangeStr(director))
-            .genre(arrangeStr(genre))
-            .nation(arrangeStr(nation))
+            .actors(actor)
+            .directors(director)
+            .genre(genre)
+            .nation(nation)
             .runTime(Long.parseLong(movieInfo.getShowTm()))
             .openDt(openDt)
             .status(MovieStatus.STATUS_WILL)
             .build();
 
         movieRePository.save(movie);
-        return ResponseMessage.success(movie);
+        return movie;
     }
+
     //제목으로 코드조회
-    public ResponseMessage getMovieCodeByTitle(String movieNm) {
-        List<MovieCode> movieCodeList = movieCodeRepository.findByTitleContaining(movieNm);
+    public List<MovieCode> getMovieCodeByTitle(String movieNm) {
+        List<MovieCode> movieCodeList = movieCodeRepository.findByTitleContaining(
+            movieNm);
 
         if (movieCodeList.size() < 1) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
+            throw new RuntimeException(
+                ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
-        return ResponseMessage.success(movieCodeList);
+        return movieCodeList;
     }
+
     //제목으로 영화 상세정보 조회
-    public ResponseMessage movieInfoListByTitle(String movieNm) {
-        List<Movie> movieList = movieRePository.findAllByTitleContaining(movieNm);
+    public List<Movie> movieInfoListByTitle(String movieNm) {
+        List<Movie> movieList = movieRePository.findAllByTitleContaining(
+            movieNm);
 
         if (movieList.size() < 1) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
+            throw new RuntimeException(
+                ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        return ResponseMessage.success(movieList);
+        return movieList;
     }
+
     //영화 상세정보 삭제
-    public ResponseMessage deleteMovieInfo(String movieNm) {
-        List<Movie> movieList = movieRePository.findAllByTitleContaining(movieNm);
+    public List<Movie> deleteMovieInfo(String movieNm) {
+        List<Movie> movieList = movieRePository.findAllByTitleContaining(
+            movieNm);
         if (movieList.size() > 1) {
-            return ResponseMessage.fail(ErrorCode.MANY_MOVIE_FOUND.getDescription(), movieList);
+            throw new RuntimeException(
+                ErrorCode.MANY_MOVIE_FOUND.getDescription());
         } else if (movieList.size() < 1) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
+            throw new RuntimeException(
+                ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
         movieRePository.delete(movieList.get(0));
-        return ResponseMessage.success(movieList);
+        return movieList;
     }
+
     //장르로 영화 조회
-    public ResponseMessage movieInfoListByGenre(String genre) {
+    public List<Movie> movieInfoListByGenre(String genre) {
         List<Movie> movieList;
 
         try {
             movieList = movieRePository.findAllByGenreContaining(genre);
         } catch (Exception e) {
-            return ResponseMessage.fail("");
+            throw new RuntimeException();
         }
         if (movieList.size() < 1) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
+            throw new RuntimeException(
+                ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        return ResponseMessage.success(movieList);
+        return movieList;
     }
+
     //감독으로 영화 조회
-    public ResponseMessage movieInfoListByDirector(String director) {
+    public List<Movie> movieInfoListByDirector(String director) {
         List<Movie> movieList;
 
         try {
             movieList = movieRePository.findAllByDirectorsContaining(director);
         } catch (Exception e) {
-            return ResponseMessage.fail("");
+            throw new RuntimeException();
         }
         if (movieList.size() < 1) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
+            throw new RuntimeException(
+                ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        return ResponseMessage.success(movieList);
+        return movieList;
     }
+
     //배우로 영화 조회
-    public ResponseMessage movieInfoListByActor(String actor) {
+    public List<Movie> movieInfoListByActor(String actor) {
         List<Movie> movieList;
 
         try {
             movieList = movieRePository.findAllByActorsContaining(actor);
         } catch (Exception e) {
-            return ResponseMessage.fail("");
+            throw new RuntimeException();
         }
         if (movieList.size() < 1) {
-            return ResponseMessage.fail(ErrorCode.MOVIE_NOT_FOUND.getDescription());
+            throw new RuntimeException(
+                ErrorCode.MOVIE_NOT_FOUND.getDescription());
         }
 
-        return ResponseMessage.success(movieList);
+        return movieList;
     }
 }

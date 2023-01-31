@@ -18,32 +18,18 @@ public class MovieScheduler {
 
     private MovieService movieService;
 
-//    @Scheduled(cron = "0 0 12 * * *")
-//    public void fetchToday() throws ParseException {
-//        LocalDate day = LocalDate.now().minusDays(1);
-//        String dayString = day.toString().replace("-", "");
-//
-//        List<MovieCode> movieCodeList = (List<MovieCode>) movieService.saveMovieCode(
-//            dayString).getBody();
-//
-//        for (MovieCode item : movieCodeList) {
-//            System.out.println(movieService.saveMovieInfoByMovieCode(
-//                item.getCode()));
-//        }
-//    }
-
     @Scheduled(cron = "0 0 12 * * *")
     public ResponseMessage saveDayMovieInfo() throws ParseException {
         LocalDate day = LocalDate.now().minusDays(1);
         String dayString = day.toString().replace("-", "");
 
         List<Movie> movieList = new ArrayList<>();
-        List<MovieCode> movieCodeList = (List<MovieCode>) movieService.saveMovieCode(
-            dayString).getBody();
+        List<MovieCode> movieCodeList = movieService.saveMovieCode(
+            dayString);
 
         for (MovieCode movieCode : movieCodeList) {
             movieList.add(
-                (Movie) movieService.saveMovieInfoByMovieCode(movieCode.getCode()).getBody());
+                movieService.saveMovieInfoByMovieCode(movieCode.getCode()));
         }
         return ResponseMessage.success(movieList);
     }
