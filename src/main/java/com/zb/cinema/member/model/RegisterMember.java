@@ -46,7 +46,6 @@ public class RegisterMember {
 	public static class Response {
 
 		private String email;
-		private String password;
 		private String name;
 		private String phone;
 		private LocalDateTime regDt;
@@ -54,9 +53,9 @@ public class RegisterMember {
 
 		public static Response from(MemberDto memberDto) {
 
-			return Response.builder().email(memberDto.getEmail()).password(memberDto.getPassword())
-				.name(memberDto.getName()).phone(memberDto.getPhone()).type(memberDto.getType())
-				.regDt(memberDto.getRegDt()).build();
+			return Response.builder().email(memberDto.getEmail()).name(memberDto.getName())
+				.phone(memberDto.getPhone()).type(memberDto.getType()).regDt(memberDto.getRegDt())
+				.build();
 		}
 
 	}

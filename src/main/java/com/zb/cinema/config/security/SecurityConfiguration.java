@@ -1,4 +1,4 @@
-package com.zb.cinema.config;
+package com.zb.cinema.config.security;
 
 import com.zb.cinema.config.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -38,8 +38,8 @@ public class SecurityConfiguration {
 		//URL 인증여부 설정.
 		http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 			.authorizeRequests()
-			.antMatchers("/", "/member/signup", "/member/login", "/notice/list/**",
-				"/notice/detail/**","/notice/info/**").permitAll()
+			.antMatchers("/", "/member/signup", "/member/signin", "/notice/list/**",
+				"/notice/detail/**", "/notice/info/**").permitAll()
 			//JwtFilter 추가
 			.and()
 			.addFilterBefore(this.authenticationFilter, UsernamePasswordAuthenticationFilter.class);

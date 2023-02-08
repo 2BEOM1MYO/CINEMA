@@ -1,4 +1,4 @@
-package com.zb.cinema.config;
+package com.zb.cinema.config.security;
 
 import org.jasypt.encryption.StringEncryptor;
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;

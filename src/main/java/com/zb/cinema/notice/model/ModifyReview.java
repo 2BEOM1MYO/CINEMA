@@ -40,13 +40,9 @@ public class ModifyReview {
 
 		public static Response from(NoticeDto noticeDto) {
 
-			return Response.builder()
-				.title(noticeDto.getMovieTitle())
-				.email(noticeDto.getEmail())
-				.starRating(noticeDto.getStarRating())
-				.contents(noticeDto.getContents())
-				.updateDt(noticeDto.getUpdateDt())
-				.build();
+			return Response.builder().title(noticeDto.getMovieTitle()).email(noticeDto.getEmail())
+				.starRating(noticeDto.getStarRating()).contents(noticeDto.getContents())
+				.updateDt(noticeDto.getUpdateDt()).build();
 		}
 
 	}
