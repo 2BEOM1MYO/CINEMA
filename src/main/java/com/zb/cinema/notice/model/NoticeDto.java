@@ -25,7 +25,7 @@ public class NoticeDto {
 	private LocalDateTime regDt;
 	private LocalDateTime updateDt;
 
-	public static NoticeDto fromEntity(Notice notice) {
+	public static NoticeDto from(Notice notice) {
 		return NoticeDto.builder().contents(notice.getContents()).starRating(notice.getStarRating())
 			.movieCode(notice.getNoticeMovie().getCode())
 			.movieTitle(notice.getNoticeMovie().getTitle())
