@@ -71,7 +71,7 @@ public class NoticeService {
 			throw new NoticeException(NoticeError.MOVIE_REVIEW_NO_DUPLICATION);
 		}
 
-		return NoticeDto.fromEntity(noticeRepository.save(
+		return NoticeDto.from(noticeRepository.save(
 			Notice.builder().contents(parameter.getContents()).noticeMember(reviewMember)
 				.noticeMovie(movieTitle).starRating(parameter.getStarRating())
 				.regDt(LocalDateTime.now()).build()));
@@ -85,7 +85,7 @@ public class NoticeService {
 		Pageable limit = PageRequest.of(0, 10);
 		Page<Notice> noticeList = noticeRepository.findAllByOrderByRegDt(limit);
 
-		return noticeList.stream().map(NoticeDto::fromEntity).collect(Collectors.toList());
+		return noticeList.stream().map(NoticeDto::from).collect(Collectors.toList());
 
 	}
 
@@ -97,7 +97,7 @@ public class NoticeService {
 		Notice notice = noticeRepository.findById(noticeId)
 			.orElseThrow(() -> new NoticeException(NoticeError.MOVIE_REVIEW_ID_NOT_FOUND));
 
-		return NoticeDto.fromEntity(notice);
+		return NoticeDto.from(notice);
 	}
 
 	public ViewMovieInfo getInfoByMovie(Long movieCode) {
@@ -123,7 +123,7 @@ public class NoticeService {
 		if (notice.isEmpty()) {
 			throw new NoticeException(NoticeError.MOVIE_REVIEW_NOT_FOUND);
 		}
-		return notice.stream().map(NoticeDto::fromEntity).collect(Collectors.toList());
+		return notice.stream().map(NoticeDto::from).collect(Collectors.toList());
 	}
 
 	/*
@@ -140,7 +140,7 @@ public class NoticeService {
 		notice.setUpdateDt(LocalDateTime.now());
 		noticeRepository.save(notice);
 
-		return NoticeDto.fromEntity(notice);
+		return NoticeDto.from(notice);
 	}
 
 	/*
