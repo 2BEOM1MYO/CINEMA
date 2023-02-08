@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -73,6 +74,7 @@ public class MemberService {
 		return MemberDto.from(member);
 	}
 
+	@Transactional
 	public MemberDto modifyMember(Long memberId, String token, Request request) {
 
 		Member member = validateMember(token);
@@ -83,6 +85,8 @@ public class MemberService {
 		String rePw = BCrypt.hashpw(request.getPassword(), BCrypt.gensalt());
 
 		member.setPassword(rePw);
+		member.setPhone(request.getPhone());
+		member.setEmail(request.getEmail());
 		member.setUpdateDt(LocalDateTime.now());
 		memberRepository.save(member);
 
