@@ -10,6 +10,7 @@ import com.zb.cinema.member.model.LoginMember;
 import com.zb.cinema.member.model.MemberDto;
 import com.zb.cinema.member.model.ModifyMember.Request;
 import com.zb.cinema.member.model.RegisterMember;
+import com.zb.cinema.member.model.WithDrawMember;
 import com.zb.cinema.member.repository.MemberRepository;
 import com.zb.cinema.member.type.MemberType;
 import java.time.LocalDateTime;
@@ -91,6 +92,21 @@ public class MemberService {
 		memberRepository.save(member);
 
 		return MemberDto.from(member);
+	}
+
+	public void withDrawMember(Long memberId, String token, WithDrawMember request) {
+		Member member = validateMember(token);
+
+		if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+			throw new MemberException(MemberError.MEMBER_PASSWORD_NOT_SAME);
+		}
+
+		if (!Objects.equals(member.getId(), memberId)) {
+			throw new MemberException((MemberError.MEMBER_WRONG_APPROACH));
+		}
+
+		member.setType(MemberType.ROLE_UN_ACCESSIBLE);
+		memberRepository.save(member);
 	}
 
 	private Member validateMember(String token) {

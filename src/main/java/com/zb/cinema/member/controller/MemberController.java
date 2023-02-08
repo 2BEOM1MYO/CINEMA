@@ -8,6 +8,7 @@ import com.zb.cinema.member.model.MemberInfo;
 import com.zb.cinema.member.model.ModifyMember;
 import com.zb.cinema.member.model.RegisterMember;
 import com.zb.cinema.member.model.TokenDto;
+import com.zb.cinema.member.model.WithDrawMember;
 import com.zb.cinema.member.service.MemberService;
 import com.zb.cinema.member.type.MemberType;
 import javax.validation.Valid;
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -71,5 +71,10 @@ public class MemberController {
 		@RequestHeader("Authorization") String token,
 		@RequestBody @Valid ModifyMember.Request request) {
 		return ModifyMember.Response.from(memberService.modifyMember(memberId, token, request));
+	}
+	@PostMapping("/withdraw/{memberId}")
+	public void withDrawMember(@PathVariable Long memberId,
+		@RequestHeader("Authorization") String token, @RequestBody @Valid WithDrawMember request) {
+		memberService.withDrawMember(memberId, token, request);
 	}
 }
