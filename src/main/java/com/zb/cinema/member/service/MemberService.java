@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -61,6 +62,17 @@ public class MemberService {
 		return member;
 	}
 
+	public MemberDto getMemberInfo(Long memberId, String token) {
+
+		Member member = validateMember(token);
+
+		if (!Objects.equals(member.getId(), memberId)) {
+			throw new MemberException((MemberError.INFO_MEMBER_UN_MATCH));
+		}
+
+		return MemberDto.from(member);
+	}
+
 	public MemberDto modifyMember(Long memberId, String token, Request request) {
 
 		Member member = validateMember(token);
@@ -87,5 +99,4 @@ public class MemberService {
 		return memberRepository.findByEmail(email)
 			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
 	}
-
 }
