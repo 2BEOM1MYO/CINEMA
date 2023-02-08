@@ -4,6 +4,8 @@ import com.zb.cinema.config.jwt.JwtAuthenticationFilter;
 import com.zb.cinema.config.jwt.TokenProvider;
 import com.zb.cinema.member.entity.Member;
 import com.zb.cinema.member.model.LoginMember;
+import com.zb.cinema.member.model.ModifyMember;
+import com.zb.cinema.member.model.ModifyMember.Response;
 import com.zb.cinema.member.model.RegisterMember;
 import com.zb.cinema.member.model.TokenDto;
 import com.zb.cinema.member.service.MemberService;
@@ -14,8 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,7 +41,7 @@ public class MemberController {
 			memberService.register(request));
 	}
 
-	@PostMapping("/login")
+	@PostMapping("/signin")
 	public ResponseEntity<TokenDto> signIn(@RequestBody @Valid LoginMember loginMember) {
 
 		Member member = memberService.login(loginMember);
@@ -49,6 +55,15 @@ public class MemberController {
 			JwtAuthenticationFilter.TOKEN_PREFIX + token);
 
 		return new ResponseEntity<>(new TokenDto(token), httpHeaders, HttpStatus.OK);
+
+	}
+
+	@PutMapping("{memberId}")
+	@PreAuthorize("hasRole('READWRITE')")
+	public ModifyMember.Response modifyMember(@PathVariable Long memberId,
+		@RequestHeader("Authorization") String token,
+		@RequestBody @Valid ModifyMember.Request request) {
+		return ModifyMember.Response.from(memberService.modifyMember(memberId, token, request));
 
 	}
 }

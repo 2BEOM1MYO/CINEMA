@@ -1,33 +1,33 @@
 package com.zb.cinema.member.service;
 
+import static com.zb.cinema.config.jwt.JwtAuthenticationFilter.TOKEN_PREFIX;
+
+import com.zb.cinema.config.jwt.TokenProvider;
 import com.zb.cinema.member.entity.Member;
 import com.zb.cinema.member.exception.MemberError;
 import com.zb.cinema.member.exception.MemberException;
 import com.zb.cinema.member.model.LoginMember;
 import com.zb.cinema.member.model.MemberDto;
+import com.zb.cinema.member.model.ModifyMember.Request;
 import com.zb.cinema.member.model.RegisterMember;
 import com.zb.cinema.member.repository.MemberRepository;
 import com.zb.cinema.member.type.MemberType;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class MemberService implements UserDetailsService {
+public class MemberService {
 
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final TokenProvider tokenProvider;
 
 	public MemberDto register(RegisterMember.Request parameter) {
 
@@ -45,26 +45,6 @@ public class MemberService implements UserDetailsService {
 				.type(MemberType.ROLE_READWRITE).build()));
 	}
 
-	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
-		Optional<Member> memberOptional = this.memberRepository.findByEmail(username);
-		if (memberOptional.isEmpty()) {
-			throw new UsernameNotFoundException("사용자를 찾을 수 없습니다.");
-		}
-
-		Member member = memberOptional.get();
-		List<GrantedAuthority> authorities = new ArrayList<>();
-		authorities.add(new SimpleGrantedAuthority("ROLE_READWRITE"));
-
-		if (MemberType.ROLE_ADMIN.equals(member.getType())) {
-			authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-		}
-
-		return new org.springframework.security.core.userdetails.User(member.getEmail(),
-			member.getPassword(), authorities);
-	}
-
 	public Member login(LoginMember parameter) {
 
 		Member member = memberRepository.findByEmail(parameter.getEmail())
@@ -80,4 +60,32 @@ public class MemberService implements UserDetailsService {
 
 		return member;
 	}
+
+	public MemberDto modifyMember(Long memberId, String token, Request request) {
+
+		Member member = validateMember(token);
+
+		if (!Objects.equals(member.getId(), memberId)) {
+			throw new MemberException((MemberError.MODIFY_MEMBER_UN_MATCH));
+		}
+		String rePw = BCrypt.hashpw(request.getPassword(), BCrypt.gensalt());
+
+		member.setPassword(rePw);
+		member.setUpdateDt(LocalDateTime.now());
+		memberRepository.save(member);
+
+		return MemberDto.from(member);
+	}
+
+	private Member validateMember(String token) {
+
+		String subToken = token.substring(TOKEN_PREFIX.length());
+
+		String email = "";
+		email = tokenProvider.getUserPk(subToken);
+
+		return memberRepository.findByEmail(email)
+			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
+	}
+
 }

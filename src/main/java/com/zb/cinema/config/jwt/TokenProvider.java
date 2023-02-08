@@ -1,6 +1,6 @@
 package com.zb.cinema.config.jwt;
 
-import com.zb.cinema.member.service.MemberService;
+import com.zb.cinema.member.service.AuthorityService;
 import com.zb.cinema.member.type.MemberType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TokenProvider {
 
-	private final MemberService memberService;
+	private final AuthorityService authorityService;
 
 	@Value("{spring.jwt.secret}")
 	private String secretKey;
@@ -55,7 +55,7 @@ public class TokenProvider {
 
 	// JWT 토큰에서 인증 정보 조회
 	public Authentication getAuthentication(String token) {
-		UserDetails userDetails = memberService.loadUserByUsername(this.getUserPk(token));
+		UserDetails userDetails = authorityService.loadUserByUsername(this.getUserPk(token));
 		return new UsernamePasswordAuthenticationToken(userDetails, "",
 			userDetails.getAuthorities());
 	}
