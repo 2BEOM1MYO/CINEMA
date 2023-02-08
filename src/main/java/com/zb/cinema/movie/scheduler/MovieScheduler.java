@@ -38,21 +38,21 @@ public class MovieScheduler {
 
     }
 
-    @Scheduled(cron ="0 0 1 * * *") //매일 1시에 실행
-    public void saveDayMovieInfo() {
-        try {
-            JobParameters jobParameters = new JobParametersBuilder()
-                .addString("datetime", LocalDateTime.now().toString())
-                .toJobParameters();
-
-            jobLauncher.run(
-                movieInfoJobConfig.movieInfoJob(),
-                jobParameters  // job parameter 설정
-            );
-        } catch (JobExecutionException ex) {
-            log.info(ex.getMessage());
-            ex.printStackTrace();
-        }
-
-    }
+//    @Scheduled(cron ="0 0 1 * * *") //매일 1시에 실행
+//    public void saveDayMovieInfo() {
+//        try {
+//            JobParameters jobParameters = new JobParametersBuilder()
+//                .addString("datetime", LocalDateTime.now().toString())
+//                .toJobParameters();
+//
+//            jobLauncher.run(
+//                movieInfoJobConfig.movieInfoJob(),
+//                jobParameters  // job parameter 설정
+//            );
+//        } catch (JobExecutionException ex) {
+//            log.info(ex.getMessage());
+//            ex.printStackTrace();
+//        }
+//
+//    }
 }
