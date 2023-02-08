@@ -5,13 +5,16 @@ spring:
     username: ENC(JHLL2tUxydj1BITANaFXhA==)
     password: ENC(iPGny+DngG5+rPczq/yziQ==)
 
+  batch:
+    jdbc:
+      initialize-schema: always
+
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         format_sql: true
-        show_sql: true
 
   jwt:
     secret: ENC(oAMu1VEToExZeXoxYLwhG5hXaC1pvv7WgbfCov4Yh7XvcXrbK4zU1kW0nEUZgm9EdJEYGXBSXYQ=)
