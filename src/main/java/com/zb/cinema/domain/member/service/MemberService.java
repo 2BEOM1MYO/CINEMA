@@ -1,8 +1,8 @@
 package com.zb.cinema.domain.member.service;
 
-import static com.zb.cinema.configuration.jwt.JwtAuthenticationFilter.TOKEN_PREFIX;
+import static com.zb.cinema.global.jwt.JwtAuthenticationFilter.TOKEN_PREFIX;
 
-import com.zb.cinema.configuration.jwt.TokenProvider;
+import com.zb.cinema.global.jwt.TokenProvider;
 import com.zb.cinema.domain.member.entity.Member;
 import com.zb.cinema.domain.member.model.LoginMember;
 import com.zb.cinema.domain.member.model.MemberDto;
