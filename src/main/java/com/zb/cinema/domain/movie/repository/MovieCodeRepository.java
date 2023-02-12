@@ -11,4 +11,6 @@ public interface MovieCodeRepository extends JpaRepository<MovieCode, Long> {
 
     List<MovieCode> findByTitleContaining(String title);
     Optional<MovieCode> findByTitle(String title);
+
+    MovieCode findByCode(Long movieCode);
 }
