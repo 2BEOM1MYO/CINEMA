@@ -7,6 +7,7 @@ import com.zb.cinema.domain.payment.service.KakaoPayService;
 import com.zb.cinema.domain.ticketing.entity.Ticket;
 import com.zb.cinema.domain.ticketing.model.TicketInput;
 import com.zb.cinema.domain.ticketing.service.TicketService;
+import io.swagger.annotations.Api;
 import java.security.Principal;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Api(tags = "Ticketing-Api")
 @RestController
 @RequestMapping("/ticketing")
 @RequiredArgsConstructor

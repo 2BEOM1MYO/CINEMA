@@ -8,6 +8,8 @@ import com.zb.cinema.domain.notice.model.ReviewAllList;
 import com.zb.cinema.domain.notice.model.ReviewByMovie;
 import com.zb.cinema.domain.notice.model.ReviewDetail;
 import com.zb.cinema.domain.notice.model.WriteReview;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
+@Api(tags = "Movie-Review-Notice-Api")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/notice")
@@ -32,7 +35,8 @@ public class NoticeController {
 
 	private final NoticeService noticeService;
 
-	@PostMapping
+	@ApiOperation(value = "관람 후기 등록 시, 등록 내용이 DB에 저장됩니다.")
+	@PostMapping()
 	@PreAuthorize("hasRole('READWRITE')")
 	public WriteReview.Response writeReview(@RequestHeader("Authorization") String token,
 		@RequestBody @Valid WriteReview.Request request) {
@@ -43,6 +47,7 @@ public class NoticeController {
 	/*
 	 	전체 목록 보기 (Pagenation)
 	 */
+	@ApiOperation(value = "등록되어 있는 전체 영화 리뷰 목록을 볼 수 있습니다.")
 	@GetMapping("/list")
 	public List<ReviewAllList> getReviewALlList() {
 		return noticeService.getNoticeList().stream().map(
@@ -54,6 +59,7 @@ public class NoticeController {
 	/*
 	 	후기 글 상세 보기
 	 */
+	@ApiOperation(value = "리뷰 상세 정보를 볼 수 있습니다.")
 	@GetMapping("/detail/{noticeId}")
 	public ReviewDetail getReviewDetail(@PathVariable Long noticeId) {
 		return ReviewDetail.from(noticeService.getReviewDetail(noticeId));
@@ -62,6 +68,7 @@ public class NoticeController {
 	/*
 		영화 정보, 별점 평균 정보 보기
 	 */
+	@ApiOperation(value = "리뷰 등록 전, 해당 영화의 정보를 확인할 수 있습니다.", notes = "영화 정보, 등록된 리뷰 평균 별점")
 	@GetMapping("/info/{movieCode}")
 	public ViewMovieInfo getMovieByInfo(@PathVariable Long movieCode) {
 		return noticeService.getInfoByMovie(movieCode);
@@ -70,6 +77,7 @@ public class NoticeController {
 	/*
 	 	영화 별 후기 리스트 보기
 	 */
+	@ApiOperation(value = "영화 별로 등록된 리뷰 목록을 확인할 수 있습니다.")
 	@GetMapping("/info/list/{movieCode}")
 	public List<ReviewByMovie> getReviewByMovie(@PathVariable Long movieCode) {
 
@@ -80,6 +88,7 @@ public class NoticeController {
 			.collect(Collectors.toList());
 	}
 
+	@ApiOperation(value = "본인이 등록한 리뷰를 수정할 수 있습니다.")
 	@PatchMapping("/detail/{noticeId}")
 	@PreAuthorize("hasRole('READWRITE')")
 	public ModifyReview.Response modifyReview(@PathVariable Long noticeId,
@@ -91,6 +100,7 @@ public class NoticeController {
 		return ModifyReview.Response.from(noticeService.modifyReview(noticeId, token, request));
 	}
 
+	@ApiOperation(value = "본인이 등록한 리뷰를 삭제할 수 있습니다.")
 	@DeleteMapping("/detail/{noticeId}")
 	@PreAuthorize("hasRole('READWRITE')")
 	public void deleteReview(@PathVariable Long noticeId,

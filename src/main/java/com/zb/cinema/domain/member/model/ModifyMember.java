@@ -1,5 +1,6 @@
 package com.zb.cinema.domain.member.model;
 
+import io.swagger.annotations.ApiModel;
 import java.time.LocalDateTime;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
@@ -8,13 +9,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 public class ModifyMember {
 
 	@Getter
 	@Setter
 	@NoArgsConstructor
 	@AllArgsConstructor
+	@ApiModel(value = "회원 수정 입력 정보")
 	public static class Request {
 
 		@NotBlank(message = "수정 할 비밀번호를 입력해주세요.")
@@ -35,6 +36,7 @@ public class ModifyMember {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
+	@ApiModel(value = "회원 수정 응답 정보")
 	public static class Response {
 
 		private String password;
