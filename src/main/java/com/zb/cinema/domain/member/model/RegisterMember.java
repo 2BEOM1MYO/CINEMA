@@ -1,6 +1,7 @@
 package com.zb.cinema.domain.member.model;
 
 import com.zb.cinema.domain.member.type.MemberType;
+import io.swagger.annotations.ApiModel;
 import java.time.LocalDateTime;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
@@ -10,13 +11,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 public class RegisterMember {
 
 	@Getter
 	@Setter
 	@NoArgsConstructor
 	@AllArgsConstructor
+	@ApiModel(value = "회원 가입 입력 정보")
 	public static class Request {
 
 		@NotBlank(message = "사용자 ID(e-mail)는 필수 항목입니다.")
@@ -43,6 +44,7 @@ public class RegisterMember {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
+	@ApiModel(value = "회원 가입 응답 정보")
 	public static class Response {
 
 		private String email;
@@ -51,11 +53,11 @@ public class RegisterMember {
 		private LocalDateTime regDt;
 		private MemberType type;
 
-		public static Response from(MemberDto memberDto) {
+		public static RegisterMember.Response from(MemberDto memberDto) {
 
-			return Response.builder().email(memberDto.getEmail()).name(memberDto.getName())
-				.phone(memberDto.getPhone()).type(memberDto.getType()).regDt(memberDto.getRegDt())
-				.build();
+			return RegisterMember.Response.builder().email(memberDto.getEmail())
+				.name(memberDto.getName()).phone(memberDto.getPhone()).regDt(memberDto.getRegDt())
+				.type(memberDto.getType()).build();
 		}
 
 	}

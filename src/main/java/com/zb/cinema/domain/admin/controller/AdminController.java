@@ -15,6 +15,7 @@ import com.zb.cinema.domain.member.model.RegisterMember;
 import com.zb.cinema.domain.member.type.MemberType;
 import com.zb.cinema.domain.movie.entity.Movie;
 import com.zb.cinema.domain.movie.type.MovieStatus;
+import io.swagger.annotations.Api;
 import java.util.List;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Api(tags = "Admin-Api")
 @RequiredArgsConstructor
 @RestController
 public class AdminController {

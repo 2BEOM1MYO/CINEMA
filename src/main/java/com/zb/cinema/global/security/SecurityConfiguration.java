@@ -1,6 +1,6 @@
-package com.zb.cinema.configuration.security;
+package com.zb.cinema.global.security;
 
-import com.zb.cinema.configuration.jwt.JwtAuthenticationFilter;
+import com.zb.cinema.global.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +21,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfiguration {
 
 	private final JwtAuthenticationFilter authenticationFilter;
+	private static final String[] PERMIT_URL_ARRAY = {"/", "/member/signUp", "/member/signIn",
+		"/notice/list/**", "/notice/detail/**", "/notice/info/**",
+		/* swagger v2 */
+		"/v2/api-docs", "/swagger-resources", "/swagger-resources/**", "/configuration/ui",
+		"/configuration/security", "/swagger-ui.html", "/webjars/**",
+		/* swagger v3 */
+		"/v3/api-docs/**", "/swagger-ui/**"};
 
 	@Bean
 	public WebSecurityCustomizer configure() {
@@ -37,9 +44,7 @@ public class SecurityConfiguration {
 
 		//URL 인증여부 설정.
 		http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-			.authorizeRequests()
-			.antMatchers("/", "/member/signup", "/member/signin", "/notice/list/**",
-				"/notice/detail/**", "/notice/info/**").permitAll()
+			.authorizeRequests().antMatchers(PERMIT_URL_ARRAY).permitAll()
 			//JwtFilter 추가
 			.and()
 			.addFilterBefore(this.authenticationFilter, UsernamePasswordAuthenticationFilter.class);

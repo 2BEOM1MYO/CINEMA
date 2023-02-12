@@ -4,6 +4,7 @@ import com.zb.cinema.domain.movie.entity.Movie;
 import com.zb.cinema.domain.movie.entity.MovieCode;
 import com.zb.cinema.domain.movie.model.request.InputDates;
 import com.zb.cinema.domain.movie.service.MovieService;
+import io.swagger.annotations.Api;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Api(tags = "Movie-Data-Api")
 @RequiredArgsConstructor
 @RestController
 public class MovieController {

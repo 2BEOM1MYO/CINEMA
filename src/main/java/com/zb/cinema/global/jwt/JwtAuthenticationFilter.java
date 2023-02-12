@@ -1,4 +1,4 @@
-package com.zb.cinema.configuration.jwt;
+package com.zb.cinema.global.jwt;
 
 import java.io.IOException;
 import javax.servlet.FilterChain;
