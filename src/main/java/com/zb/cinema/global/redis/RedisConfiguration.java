@@ -1,4 +1,4 @@
-package com.zb.cinema.configuration.redis;
+package com.zb.cinema.global.redis;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

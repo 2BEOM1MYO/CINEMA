@@ -1,4 +1,4 @@
-package com.zb.cinema.configuration.security;
+package com.zb.cinema.global.security;
 
 import org.jasypt.encryption.StringEncryptor;
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class JasyptConfig {
+public class JasyptConfiguration {
 	@Value("${jasypt.encryptor.password}")
 	private String PASSWORD;
 
