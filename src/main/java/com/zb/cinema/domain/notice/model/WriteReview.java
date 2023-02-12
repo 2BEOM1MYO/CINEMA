@@ -1,5 +1,6 @@
 package com.zb.cinema.domain.notice.model;
 
+import io.swagger.annotations.ApiModel;
 import java.time.LocalDateTime;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -15,6 +16,7 @@ public class WriteReview {
 	@Setter
 	@NoArgsConstructor
 	@AllArgsConstructor
+	@ApiModel(value = "후기 등록 입력 정보")
 	public static class Request {
 
 		@NotBlank(message = "영화 제목을 입력해주세요.")
@@ -33,6 +35,7 @@ public class WriteReview {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
+	@ApiModel(value = "후기 등록 응답 정보")
 	public static class Response {
 
 		private String title;
@@ -41,9 +44,9 @@ public class WriteReview {
 		private String contents;
 		private LocalDateTime regDt;
 
-		public static Response from(NoticeDto noticeDto) {
+		public static WriteReview.Response from(NoticeDto noticeDto) {
 
-			return Response.builder().title(noticeDto.getMovieTitle()).email(noticeDto.getEmail())
+			return WriteReview.Response.builder().title(noticeDto.getMovieTitle()).email(noticeDto.getEmail())
 				.starRating(noticeDto.getStarRating()).contents(noticeDto.getContents())
 				.regDt(noticeDto.getRegDt()).build();
 		}
