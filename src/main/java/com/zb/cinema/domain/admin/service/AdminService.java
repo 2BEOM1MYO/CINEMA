@@ -14,7 +14,7 @@ import com.zb.cinema.domain.admin.repository.AuditoriumRepository;
 import com.zb.cinema.domain.admin.repository.ScheduleRepository;
 import com.zb.cinema.domain.admin.repository.SeatRepository;
 import com.zb.cinema.domain.admin.repository.TheaterRepository;
-import com.zb.cinema.configuration.jwt.TokenProvider;
+import com.zb.cinema.global.jwt.TokenProvider;
 import com.zb.cinema.domain.member.entity.Member;
 import com.zb.cinema.domain.member.exception.MemberError;
 import com.zb.cinema.domain.member.exception.MemberException;
