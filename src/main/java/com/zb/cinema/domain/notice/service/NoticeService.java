@@ -1,8 +1,13 @@
 package com.zb.cinema.domain.notice.service;
 
-import static com.zb.cinema.configuration.jwt.JwtAuthenticationFilter.TOKEN_PREFIX;
+import static com.zb.cinema.global.jwt.JwtAuthenticationFilter.TOKEN_PREFIX;
 
-import com.zb.cinema.configuration.jwt.TokenProvider;
+import com.zb.cinema.domain.notice.model.ReviewAllList;
+import com.zb.cinema.domain.notice.model.ReviewByMovie;
+import com.zb.cinema.domain.notice.model.ReviewDetail;
+import com.zb.cinema.domain.ticketing.entity.Ticket;
+import com.zb.cinema.domain.ticketing.repository.TicketRepository;
+import com.zb.cinema.global.jwt.TokenProvider;
 import com.zb.cinema.domain.member.entity.Member;
 import com.zb.cinema.domain.member.exception.MemberError;
 import com.zb.cinema.domain.member.exception.MemberException;
@@ -45,13 +50,14 @@ public class NoticeService {
 	private final PasswordEncoder passwordEncoder;
 	private final MovieCodeRepository movieCodeRepository;
 	private final MovieRepository movieRepository;
+	private final TicketRepository ticketRepository;
 	private final TokenProvider tokenProvider;
 
 	/*
 	 	리뷰 등록
 	 */
 	@Transactional
-	public NoticeDto writeReview(String token, WriteReview.Request parameter) {
+	public WriteReview.Response writeReview(String token, WriteReview.Request parameter) {
 
 		Member reviewMember = validateMember(token);
 
@@ -60,9 +66,7 @@ public class NoticeService {
 
 		Movie movieStatus = movieRepository.findByTitle(movieTitle.getTitle());
 
-		if (MovieStatus.STATUS_WILL.equals(movieStatus.getStatus())) {
-			throw new NoticeException(NoticeError.MOVIE_STATUS_WILL);
-		}
+		validMovieStatus(reviewMember, movieTitle, movieStatus);
 
 		Optional<Notice> noticeOptional = noticeRepository.findByNoticeMovieAndNoticeMember(
 			movieTitle, reviewMember);
@@ -71,33 +75,38 @@ public class NoticeService {
 			throw new NoticeException(NoticeError.MOVIE_REVIEW_NO_DUPLICATION);
 		}
 
-		return NoticeDto.from(noticeRepository.save(
+		Notice notice = noticeRepository.save(
 			Notice.builder().contents(parameter.getContents()).noticeMember(reviewMember)
 				.noticeMovie(movieTitle).starRating(parameter.getStarRating())
-				.regDt(LocalDateTime.now()).build()));
+				.regDt(LocalDateTime.now()).build());
+
+		return WriteReview.Response.from(NoticeDto.from(notice));
 	}
 
 	/*
 	 	전체 리스트 불러오기
 	 */
-	public List<NoticeDto> getNoticeList() {
+	public List<ReviewAllList> getNoticeList() {
 
 		Pageable limit = PageRequest.of(0, 10);
 		Page<Notice> noticeList = noticeRepository.findAllByOrderByRegDt(limit);
 
-		return noticeList.stream().map(NoticeDto::from).collect(Collectors.toList());
+		return noticeList.stream().map(NoticeDto::from).map(
+			noticeDto -> ReviewAllList.builder().email(noticeDto.getEmail())
+				.movieTitle(noticeDto.getMovieTitle()).contents(noticeDto.getContents())
+				.regDt(noticeDto.getRegDt()).build()).collect(Collectors.toList());
 
 	}
 
 	/*
 	 	후기 상세보기
 	 */
-	public NoticeDto getReviewDetail(Long noticeId) {
+	public ReviewDetail getReviewDetail(Long noticeId) {
 
 		Notice notice = noticeRepository.findById(noticeId)
 			.orElseThrow(() -> new NoticeException(NoticeError.MOVIE_REVIEW_ID_NOT_FOUND));
 
-		return NoticeDto.from(notice);
+		return ReviewDetail.from(NoticeDto.from(notice));
 	}
 
 	public ViewMovieInfo getInfoByMovie(Long movieCode) {
@@ -115,7 +124,7 @@ public class NoticeService {
 	/*
 	 	영화 별 후기 리스트 보기
 	 */
-	public List<NoticeDto> getReviewByMovie(Long movieCode) {
+	public List<ReviewByMovie> getReviewByMovie(Long movieCode) {
 
 		Pageable limit = PageRequest.of(0, 10);
 		Page<Notice> notice = noticeRepository.findByNoticeMovieCode(movieCode, limit);
@@ -123,14 +132,19 @@ public class NoticeService {
 		if (notice.isEmpty()) {
 			throw new NoticeException(NoticeError.MOVIE_REVIEW_NOT_FOUND);
 		}
-		return notice.stream().map(NoticeDto::from).collect(Collectors.toList());
+		return notice.stream().map(NoticeDto::from).map(
+				noticeDto -> ReviewByMovie.builder().email(noticeDto.getEmail())
+					.movieTitle(noticeDto.getMovieTitle()).contents(noticeDto.getContents())
+					.starRating(noticeDto.getStarRating()).regDt(noticeDto.getRegDt()).build())
+			.collect(Collectors.toList());
 	}
 
 	/*
 	 	후기 수정 (내용, 별점 수정 가능)
 	 */
 	@Transactional
-	public NoticeDto modifyReview(Long noticeId, String token, ModifyReview.Request parameter) {
+	public ModifyReview.Response modifyReview(Long noticeId, String token,
+		ModifyReview.Request parameter) {
 
 		Member reviewMember = validateMember(token);
 		Notice notice = validateWriter(noticeId, reviewMember);
@@ -140,7 +154,7 @@ public class NoticeService {
 		notice.setUpdateDt(LocalDateTime.now());
 		noticeRepository.save(notice);
 
-		return NoticeDto.from(notice);
+		return ModifyReview.Response.from(NoticeDto.from(notice));
 	}
 
 	/*
@@ -174,7 +188,7 @@ public class NoticeService {
 	private Notice validateWriter(Long noticeId, Member member) {
 
 		Notice notice = noticeRepository.findById(noticeId)
-			.orElseThrow(() -> new  NoticeException(NoticeError.MOVIE_REVIEW_ID_NOT_FOUND));
+			.orElseThrow(() -> new NoticeException(NoticeError.MOVIE_REVIEW_ID_NOT_FOUND));
 
 		if (!Objects.equals(notice.getNoticeMember().getEmail(), member.getEmail())) {
 			throw new NoticeException(NoticeError.MOVIE_REVIEW_USER_UN_MATCH);
@@ -183,4 +197,18 @@ public class NoticeService {
 		return notice;
 	}
 
+	private void validMovieStatus(Member reviewMember, MovieCode movieTitle, Movie movieStatus) {
+		if (MovieStatus.STATUS_WILL.equals(movieStatus.getStatus())) {
+			throw new NoticeException(NoticeError.MOVIE_STATUS_WILL);
+		}
+
+		if (MovieStatus.STATUS_SHOWING.equals(movieStatus.getStatus())) {
+			Optional<Ticket> ticketCheck = ticketRepository.findTicketByMemberIdAndMovieCode(
+				reviewMember.getId(), movieTitle.getCode());
+
+			if (ticketCheck.isEmpty()) {
+				throw new NoticeException(NoticeError.MOVIE_STATUS_SHOWING);
+			}
+		}
+	}
 }
