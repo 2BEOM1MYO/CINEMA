@@ -2,6 +2,8 @@ package com.zb.cinema.domain.member.service;
 
 import static com.zb.cinema.global.jwt.JwtAuthenticationFilter.TOKEN_PREFIX;
 
+import com.zb.cinema.domain.member.model.MemberInfo;
+import com.zb.cinema.domain.member.model.RegisterMember;
 import com.zb.cinema.global.jwt.TokenProvider;
 import com.zb.cinema.domain.member.entity.Member;
 import com.zb.cinema.domain.member.model.LoginMember;
@@ -32,7 +34,7 @@ public class MemberService {
 	private final PasswordEncoder passwordEncoder;
 	private final TokenProvider tokenProvider;
 
-	public MemberDto register(Request parameter) {
+	public RegisterMember.Response register(Request parameter) {
 
 		Optional<Member> optionalMember = memberRepository.findByEmail(parameter.getEmail());
 
@@ -42,10 +44,10 @@ public class MemberService {
 
 		String pw = BCrypt.hashpw(parameter.getPassword(), BCrypt.gensalt());
 
-		return MemberDto.from(memberRepository.save(
+		return RegisterMember.Response.from(MemberDto.from(memberRepository.save(
 			Member.builder().email(parameter.getEmail()).password(pw).name(parameter.getName())
 				.phone(parameter.getPhone()).regDt(LocalDateTime.now())
-				.type(MemberType.ROLE_READWRITE).build()));
+				.type(MemberType.ROLE_READWRITE).build())));
 	}
 
 	public Member login(LoginMember parameter) {
@@ -64,7 +66,7 @@ public class MemberService {
 		return member;
 	}
 
-	public MemberDto getMemberInfo(Long memberId, String token) {
+	public MemberInfo getMemberInfo(Long memberId, String token) {
 
 		Member member = validateMember(token);
 
@@ -72,11 +74,12 @@ public class MemberService {
 			throw new MemberException((MemberError.INFO_MEMBER_UN_MATCH));
 		}
 
-		return MemberDto.from(member);
+		return MemberInfo.from(MemberDto.from(member));
 	}
 
 	@Transactional
-	public MemberDto modifyMember(Long memberId, String token, ModifyMember.Request request) {
+	public ModifyMember.Response modifyMember(Long memberId, String token,
+		ModifyMember.Request request) {
 
 		Member member = validateMember(token);
 
@@ -91,7 +94,7 @@ public class MemberService {
 		member.setUpdateDt(LocalDateTime.now());
 		memberRepository.save(member);
 
-		return MemberDto.from(member);
+		return ModifyMember.Response.from(MemberDto.from(member));
 	}
 
 	public void withDrawMember(Long memberId, String token, WithDrawMember request) {

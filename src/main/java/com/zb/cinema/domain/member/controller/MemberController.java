@@ -41,8 +41,8 @@ public class MemberController {
 
 	@ApiOperation(value = "회원 가입 시, 회원 정보를 DB에 저장합니다.", notes = "ID, 비밀번호, 이름, 전화번호")
 	@PostMapping("/signUp")
-	public RegisterMember.Response signUp(@RequestBody @Valid RegisterMember.Request request) {
-		return RegisterMember.Response.from(memberService.register(request));
+	public ResponseEntity<RegisterMember.Response> signUp(@RequestBody @Valid RegisterMember.Request request) {
+		return ResponseEntity.ok(memberService.register(request));
 	}
 
 	@ApiOperation(value = "로그인", notes = "jwt 토큰 반환")
@@ -65,18 +65,18 @@ public class MemberController {
 
 	@ApiOperation(value = "회원의 상세 정보를 확인합니다.")
 	@GetMapping("{memberId}")
-	public MemberInfo getMemberInfo(@PathVariable Long memberId,
+	public ResponseEntity<MemberInfo> getMemberInfo(@PathVariable Long memberId,
 		@RequestHeader("Authorization") String token) {
-		return MemberInfo.from(memberService.getMemberInfo(memberId, token));
+		return ResponseEntity.ok(memberService.getMemberInfo(memberId, token));
 	}
 
 	@ApiOperation(value = "회원 정보를 수정 후, 수정 정보를 DB에 저장합니다.")
 	@PatchMapping("{memberId}")
 	@PreAuthorize("hasRole('READWRITE')")
-	public ModifyMember.Response modifyMember(@PathVariable Long memberId,
+	public ResponseEntity<ModifyMember.Response> modifyMember(@PathVariable Long memberId,
 		@RequestHeader("Authorization") String token,
 		@RequestBody @Valid ModifyMember.Request request) {
-		return ModifyMember.Response.from(memberService.modifyMember(memberId, token, request));
+		return ResponseEntity.ok(memberService.modifyMember(memberId, token, request));
 	}
 
 	@ApiOperation(value = "회원 탈퇴 시, 정지 회원으로 DB에 저장됩니다.")
