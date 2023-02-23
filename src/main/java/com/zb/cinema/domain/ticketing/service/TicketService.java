@@ -6,6 +6,9 @@ import com.zb.cinema.domain.admin.entity.Seat;
 import com.zb.cinema.domain.admin.repository.AuditoriumRepository;
 import com.zb.cinema.domain.admin.repository.ScheduleRepository;
 import com.zb.cinema.domain.admin.repository.SeatRepository;
+import com.zb.cinema.domain.member.exception.MemberError;
+import com.zb.cinema.domain.member.exception.MemberException;
+import com.zb.cinema.domain.member.repository.MemberRepository;
 import com.zb.cinema.domain.payment.entity.KakaoPayApproval;
 import com.zb.cinema.domain.payment.entity.KakaoPayCancel;
 import com.zb.cinema.domain.payment.exception.PayError;
@@ -19,6 +22,7 @@ import com.zb.cinema.domain.ticketing.repository.TicketRepository;
 import com.zb.cinema.domain.ticketing.entity.Ticket;
 import com.zb.cinema.domain.ticketing.model.TicketInput;
 import com.zb.cinema.domain.payment.repository.PaymentRepository;
+import com.zb.cinema.global.jwt.TokenProvider;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -35,9 +39,16 @@ public class TicketService {
 	private final SeatRepository seatRepository;
 	private final KakaoPayCancelRepository kakaoPayCancelRepository;
 	private final KakaoPayService kakaoPayService;
+	private final TokenProvider tokenProvider;
+	private final MemberRepository memberRepository;
 
 
-	public Ticket readyTicketing(TicketInput parameter, Principal principal) {
+	public Ticket readyTicketing(TicketInput parameter) {
+
+		// 멤버 아이디
+		String email = tokenProvider.getUserPk(parameter.getToken());
+		Long memberId = memberRepository.findByEmail(email).orElseThrow(() -> new MemberException(
+			MemberError.MEMBER_NOT_FOUND)).getId();
 
 		Schedule schedule = scheduleRepository.findById(parameter.getScheduleId()).orElseThrow(
 			() -> new TicketException(TicketError.SCHEDULE_NOT_FOUND));
@@ -55,8 +66,7 @@ public class TicketService {
 		// 프론트에서 예매가 진행된 좌석은 선택하지 못하므로 중복 좌석 예매의 경우는 제외
 		// 같은 사람이 예매를 몇 번 진행할 수 있다고 가정하고 진행
 		return Ticket.builder()
-			//.memberId(Long.valueOf(principal.getName()))
-			.memberId(12L)
+			.memberId(memberId)
 			.movieCode(schedule.getMovie().getCode())
 			.theaterId(auditorium.getTheater().getId())
 			.auditoriumId(auditorium.getId())
@@ -84,6 +94,7 @@ public class TicketService {
 		Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new TicketException(TicketError.TICKET_NOT_FOUND));
 
 		// 이미 취소된 티켓이면?
+		// false : 예매 취소
 		if (ticket.isStatus()) {
 			ticket.setStatus(false);
 			ticketRepository.save(ticket);

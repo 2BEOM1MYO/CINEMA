@@ -39,7 +39,7 @@ dependencies {
 
 
 	// jeongju
-
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
 
 
 	compileOnly 'org.projectlombok:lombok'
@@ -49,7 +49,7 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'org.springframework.batch:spring-batch-test'
 
-	implementation 'com.fasterxml.jackson.core:jackson-databind'
+
 }
 
 tasks.named('test') {

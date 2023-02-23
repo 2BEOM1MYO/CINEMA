@@ -122,4 +122,9 @@ public class MemberService {
 		return memberRepository.findByEmail(email)
 			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
 	}
+
+	public String getName(String token) {
+		return memberRepository.findByEmail(tokenProvider.getUserPk(token))
+			.orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND)).getName();
+	}
 }

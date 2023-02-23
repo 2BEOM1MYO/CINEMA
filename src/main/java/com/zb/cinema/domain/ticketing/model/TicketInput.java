@@ -12,4 +12,5 @@ public class TicketInput {
 
 	private Long scheduleId;		// 나머지 정보는 auditorium에
 	private String seat;
+	private String token;
 }
