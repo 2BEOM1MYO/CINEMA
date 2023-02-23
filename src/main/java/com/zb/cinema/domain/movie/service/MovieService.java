@@ -126,12 +126,6 @@ public class MovieService {
             .build();
         movieRePository.save(movie);
 
-        MovieCode movieCodeStatus = movieCodeRepository.findByCode(
-            Long.parseLong(movieInfo.getMovieCd()));
-
-        movieCodeStatus.setBatchStatus("Y");
-        movieCodeRepository.save(movieCodeStatus);
-
         return movie;
     }
 
