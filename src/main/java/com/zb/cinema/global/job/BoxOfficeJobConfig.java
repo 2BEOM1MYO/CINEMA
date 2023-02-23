@@ -1,4 +1,4 @@
-package com.zb.cinema.domain.movie.job;
+package com.zb.cinema.global.job;
 
 import com.zb.cinema.domain.movie.entity.MovieCode;
 import com.zb.cinema.domain.movie.service.MovieService;

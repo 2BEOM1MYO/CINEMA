@@ -26,7 +26,4 @@ public class MovieCode {
 
     @Column
     private String title;
-
-    @Column(length = 1)
-    private String batchStatus;
 }
