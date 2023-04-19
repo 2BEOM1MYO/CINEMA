@@ -1,16 +1,28 @@
 # CINNE, 씬느 🍿
 https://chxxyx0.notion.site/d7e7fcad0b4f4b83afe4c9ea35a4ab01
 
-## **프로젝트 주제**
+# 기획서
 
-- 코비스(영화진흥위원회) 오픈 API를 활용한 현재 상영 영화 예매 관리 서비스, 카테고리별 영화 추천 기능과 관람 후기 공유 기능 제공
+## 🍿 **프로젝트 주제**
+
+- 코비스(영화진흥위원회) 오픈 API를 활용한 현재 상영 영화 예매 관리 서비스
+    
+    사용자들 카테고리별 영화 추천 기능과 관람 후기 공유 기능 제공
     
 
 ## **프로젝트 기획 배경**
+
 - 최근 OTT 서비스 수요 증가 및 코로나 팬데믹 직격탄을 맞은 극장가 위기 극복
 - 학습한 내용을 토대로 예매, 결제, 커뮤니티 서비스 구현해보려는 목적
 
+## **프로젝트 구조 (수정 필요)**
+
+## ERD
+
+![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/fdf53ca4-221a-423b-a17a-e84a0abf5db7/Untitled.png)
+
 ## 사용 기술 스택
+
 - SpringBoot 2.7.5
 - Java 11
 - MySQL
@@ -19,7 +31,7 @@ https://chxxyx0.notion.site/d7e7fcad0b4f4b83afe4c9ea35a4ab01
 ## 프로젝트 기능
 
 <aside>
-💡 주요 기능
+💡 **주요 기능**
 
 - [ ]  회원 관리 ( 회원가입 & 로그인 )
 - [ ]  예매 관리 ( 예매하기 )
@@ -105,3 +117,11 @@ https://chxxyx0.notion.site/d7e7fcad0b4f4b83afe4c9ea35a4ab01
         - 상영 상태 - 관리자는 예정, 상영 중, 상영 종료 변경이 가능하다.
         - 상영 일자 - 관리자는 상영 일정 지정이 가능하다.
     
+
+### 📢 기능 분담
+
+🟢 이 철 : 데이터 파싱, 관리자 API, 영화 검색 API
+
+🟣 허정주 : 예매 관리 API, 결제 API
+
+🔵 서채영 : 회원 관리 API, 후기 게시판 API
